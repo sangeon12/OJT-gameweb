@@ -1,4 +1,4 @@
-# higg-music
+# vue-template
 
 > A Vue.js project
 
