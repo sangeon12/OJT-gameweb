@@ -52,7 +52,7 @@ io.on("connect", socket =>{
     socket.on('login', data=>{
         let nickName = data;
         let manager = false;
-        if(data === '9910'){
+        if(data === 'admin'){
             nickName = '임상언'; 
             manager = true;
             managerOn = true;
