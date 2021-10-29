@@ -1,5 +1,5 @@
 {
-  "name": "vue-template",
+  "name": "OJT-project",
   "version": "1.0.0",
   "description": "A Vue.js project",
   "author": "",
@@ -7,10 +7,13 @@
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "start": "npm run dev",
-    "build": "node build/build.js"
+    "build": "node build/build.js",
+    "serve": "node build/build.js & cd back_server & node server.js"
   },
   "dependencies": {
     "axios": "^0.23.0",
+    "bootstrap": "^5.1.3",
+    "socket.io": "^4.3.1",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },
