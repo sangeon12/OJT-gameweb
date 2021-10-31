@@ -5,7 +5,7 @@
         <h2>Please login</h2>
       </div>
     <input v-model="nickName" type="text" class="form-control" placeholder="Username" aria-label="Nickname" aria-describedby="basic-addon1">
-    <button type="button" class="btn btn-secondary" @click="login">login</button>      
+    <button type="button" class="btn btn-secondary" @click="login" @keyDown.enter="login">login</button>      
   </div>
 </template>
 
@@ -20,7 +20,6 @@ export default {
   methods:{
       login(){
           this.$axios.post('/checkNickname', {nickName:this.nickName}).then(res =>{
-              console.log(res.data);
               switch(res.data){
                     case 0:
                         alert('닉네임은 공백을 포함할 수 없습니다.');
@@ -48,9 +47,8 @@ export default {
 <style scoped>
     #login{
         margin: 0 auto;
-        margin-top: 166.5px;
-        width:  21%;
-        height: 45%;
+        width:  15%;
+        height: 33%;
         border-radius: 10px;
         background-color: white;
         text-align: center;
@@ -60,7 +58,7 @@ export default {
     input{
         width: 80%;
         margin: 0 auto;
-        margin-bottom: 5%;
+        margin-bottom: 10%;
     }
 
     .title{

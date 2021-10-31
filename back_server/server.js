@@ -46,6 +46,11 @@ app.post('/checkNickname', async (req, res) =>{
     res.json(4);
 }); 
 
+app.post('/getNickName', async (req, res) =>{
+    const idx = userList.findIndex(e => e.id === req.body.id);
+    res.json(userList[idx].nickName);
+});
+
 io.on("connect", socket =>{
     console.log(socket.id+'접속');
 
@@ -59,7 +64,13 @@ io.on("connect", socket =>{
         } 
         userList.push({id:socket.id, nickName, nickName, manager:manager});
         console.log(userList);
+        io.emit('userLogin', userList);
     });
+
+    socket.on('sendMsg', data =>{
+        let sendUser = userList.find(x => x.id === socket.id);
+        io.emit('awesome', {id:sendUser.id, nickName:sendUser.nickName, msg:data});
+    }); 
 });
 
 server.listen(7514, ()=>{
