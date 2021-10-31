@@ -4,8 +4,8 @@
           <h1>Welcome</h1>
         <h2>Please login</h2>
       </div>
-    <input v-model="nickName" type="text" class="form-control" placeholder="Username" aria-label="Nickname" aria-describedby="basic-addon1">
-    <button type="button" class="btn btn-secondary" @click="login" @keyDown.enter="login">login</button>      
+    <input v-model="nickName" type="text" class="form-control" placeholder="Username" aria-label="Nickname" aria-describedby="basic-addon1" @keydown.enter="login">
+    <button type="button" class="btn btn-secondary" @click="login">login</button>      
   </div>
 </template>
 
