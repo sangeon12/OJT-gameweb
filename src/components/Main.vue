@@ -29,8 +29,8 @@
               <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">{{chat.nickName}} : {{chat.msg}}</div>
             </div>
             <div class="send">
-              <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput">
-              <button type="button" class="btn btn-outline-dark" @click="sendMsg" v-on:keyup.enter="sendMsg">>></button>
+              <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
+              <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
             </div>
         </div>
       </div>
