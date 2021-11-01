@@ -26,7 +26,7 @@
         <div class="publicChat">
             <div class="title">채팅</div>
             <div class="chating">
-              <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">{{chat.nickName}} : {{chat.msg}}</div>
+              <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">{{chat.nickName}} : {{chat.msg}}<i class="fa-solid fa-m"></i></div>
             </div>
             <div class="send">
               <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
@@ -45,9 +45,9 @@ export default {
   name: 'Main',
   mounted(){
     this.$j(".userList").hide();
-    this.socket.on('userLogin', data=>{this.userList = data;});
+    this.socket.on('userList', data=>{this.userList = data;});
     this.$axios.post('/getNickName', {id:this.socket.id}).then(res =>{this.nickName = res.data;});
-    this.socket.on('awesome', data=>{this.chatList.push(data);});
+    this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
   },
   data(){
     return{
@@ -69,8 +69,16 @@ export default {
       }
     },
     sendMsg(){
+      if(this.msgInput === "") return;
       this.socket.emit('sendMsg', this.msgInput);
       this.msgInput = '';
+    },
+    scroll() {
+      const msgBox = document.querySelector(".chating");
+        let scrollInterval = setInterval(() => {  
+        msgBox.scrollTop = msgBox.scrollHeight;
+        clearInterval(scrollInterval);
+      }, 10);
     }
   }
 }
@@ -132,35 +140,28 @@ export default {
   .left{
     display: grid;
     grid-template-rows: 27px 1fr;
-    overflow: auto;
   }
 
   .content{
     position: relative;
     overflow: auto;
-    overflow-y: scroll;
-    scrollbar-width: none;
-  }
-  .content::-webkit-scrollbar {
-    display: none;
-  }
-
-  .publicChat{
-    width: 100%;
-    position: absolute;
-    height: 100%;
   }
 
   .userList{
     position: absolute;
     text-align: center;
-    border-radius: 5px;
+    border-bottom-right-radius: 5px;
     background-color: #bdbdbd;
-    margin-bottom: 5px;
+    margin-bottom: 5px; 
     box-shadow: 0px 3px 5px gray;
     z-index: 10;
     width: 100%;
     height: 100%;
+    overflow-y: scroll;
+    scrollbar-width: none;
+  }
+  .userList::-webkit-scrollbar {
+    display: none;
   }
 
   .user{
@@ -174,8 +175,20 @@ export default {
   }
 
   .publicChat{
+    width: 100%;
+    position: absolute;
+    height: 100%;
     display: grid;
     grid-template-rows: 27px 11fr 1fr;
+    overflow: auto;
+  }
+
+  .chating{
+    overflow-y: scroll;
+    scrollbar-width: none;
+  }
+  .chating::-webkit-scrollbar {
+    display: none;
   }
 
   .chat{

@@ -23,15 +23,19 @@ export default {
               switch(res.data){
                     case 0:
                         alert('닉네임은 공백을 포함할 수 없습니다.');
+                        this.nickName = '';
                         break;
                     case 1:
                         alert('중복되는 닉네임 입니다.');
+                        this.nickName = '';
                         break;
                     case 2:
                         alert('사용할 수 없는 닉네임입니다.');
+                        this.nickName = '';
                         break;
                     case 3:
                         alert('이미 관리자 접속중입니다.');
+                        this.nickName = '';
                         break;
                     case 4:
                         this.$socket.emit('login', this.nickName);
@@ -47,8 +51,8 @@ export default {
 <style scoped>
     #login{
         margin: 0 auto;
-        width:  15%;
-        height: 33%;
+        width:  280px;
+        height: 300px;
         border-radius: 10px;
         background-color: white;
         text-align: center;

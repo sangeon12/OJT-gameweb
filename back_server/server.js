@@ -39,9 +39,11 @@ app.post('/checkNickname', async (req, res) =>{
         res.json(2);
         return;
     }
-    if(managerOn){
-        res.json(3);
-        return;
+    if(nickName === "admin"){
+        if(managerOn){
+            res.json(3);
+            return;
+        }
     }
     res.json(4);
 }); 
@@ -64,7 +66,14 @@ io.on("connect", socket =>{
         } 
         userList.push({id:socket.id, nickName, nickName, manager:manager});
         console.log(userList);
-        io.emit('userLogin', userList);
+        io.emit('userList', userList);
+    });
+
+    socket.on('disconnect', ()=>{
+        let idx = userList.findIndex(x => x.id === socket.id);
+        if(idx < 0) return;
+        console.log(userList.splice(idx, 1));
+        io.emit('userList', userList);
     });
 
     socket.on('sendMsg', data =>{
