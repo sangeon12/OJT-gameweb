@@ -4,15 +4,15 @@
     <transition name="tr">
       <div class="createRoom" v-if="createRoomView">
         <h4>방만들기</h4>
-        <input type="text" class="form-control" placeholder="방이름" aria-label="roomName" aria-describedby="basic-addon1">
-        <input type="text" class="form-control" placeholder="비밀번호" aria-label="roomPassword" aria-describedby="basic-addon1">
-        <select class="form-select" aria-label="roomSelect">
+        <input type="text" class="form-control" v-model="createRoomName" placeholder="방이름" aria-label="roomName" aria-describedby="basic-addon1">
+        <input type="text" class="form-control" v-model="createRoomPassword" placeholder="비밀번호" aria-label="roomPassword" aria-describedby="basic-addon1">
+        <select class="form-select" aria-label="roomSelect" id="selectGame">
           <option selected>방종류</option>
-          <option value="1">채팅방</option>
-          <option value="2">끝말잇기</option>
-          <option value="3">마피아</option>
+          <option value="chating">채팅방</option>
+          <option value="endword">끝말잇기</option>
+          <option value="mafia">마피아</option>
         </select>
-        <button type="button" class="btn btn-warning">만들기</button>
+        <button type="button" class="btn btn-warning" @click="createRoom">만들기</button>
         <button type="button" class="btn btn-info" @click="createRoomView = false">취소</button>
       </div>
     </transition>
@@ -35,10 +35,7 @@
           <button type="button" class="btn btn-secondary" @click="logout">로그아웃</button>
         </div>
         <div class="roomList">
-          <div class="room">방</div>
-          <div class="room">방</div>
-          <div class="room">방</div>
-          <div class="room">방</div>
+          <div class="room" v-for="room in roomList" :key="room">{{room.roomName}}</div>
         </div>
       </div>
 
@@ -87,6 +84,7 @@ export default {
       chating.appendChild(systemMsg);
       this.scroll();
     });
+    this.socket.on('roomList', data=>{this.roomList = data});
   },
   data(){
     return{
@@ -96,7 +94,11 @@ export default {
       chatList:[],
       msgInput:'',
       createRoomView:false,
-      searchRoomView:false
+      searchRoomView:false,
+      createRoomName:'',
+      createRoomPassword:'',
+      roomIn:false,
+      roomList:[]
     }
   },
   methods:{
@@ -114,6 +116,7 @@ export default {
       this.msgInput = '';
     },
     scroll() {
+      if(this.roomIn) return;
       const msgBox = document.querySelector(".chating");
         let scrollInterval = setInterval(() => {  
         msgBox.scrollTop = msgBox.scrollHeight;
@@ -139,6 +142,14 @@ export default {
       }else{
         return;
       }
+    },
+    createRoom(){
+      const selectGame = document.querySelector("#selectGame").value;
+      if(this.createRoomName === "" || selectGame === ""){
+        alert("방 이름 또는 게임을 선택해주세요.");
+        return;   
+      }
+      this.socket.emit(selectGame, {roomName:this.createRoomName, roomPassword:this.createRoomPassword, selectGame:selectGame});
     }
   }
 }

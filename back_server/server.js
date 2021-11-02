@@ -25,6 +25,12 @@ app.use(bodyParser.json());
 let userList = [];//현재 접속한 유저 리스트
 let adminPassword = 'admin';//관리자 패스워드
 let adminOn = false;//관리자 접속 여부
+let roomId = 0;
+let roomList = [];//방목록
+let chatingInUser = [];//채팅방 참여자 목록
+let endwordInUser = [];//끝말잇기게임 참여자 목록
+let mafiaInUser = [];//마피아게임 참여자 목록
+
 app.post('/checkNickname', async (req, res) =>{
     const nickName = req.body.nickName;
     const nullCheck = /\s/;
@@ -95,6 +101,13 @@ io.on("connect", socket =>{
         console.log(msg);
         io.emit('systemMsg', msg);
     }
+
+    socket.on('chating', data=>{
+        roomList.push({roomName:data.roomName, roomPassword:data.roomPassword, selectGame:data.selectGame, roomId:roomId , host:socket.id, max:8, user:1});
+        io.emit('roomList', roomList);
+        let user = userList.find(x => x.id === socket.id);
+        chatingInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId});
+    });
 });
 
 server.listen(7514, ()=>{
