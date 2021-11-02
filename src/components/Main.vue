@@ -20,7 +20,7 @@
     <transition name="tr">
       <div class="searchRoom" v-if="searchRoomView">
         <h4>방찾기</h4>
-        <input type="text" class="form-control" placeholder="방이름" aria-label="roomname" aria-describedby="basic-addon1">
+        <input type="text" class="form-control" placeholder="방번호" aria-label="roomname" aria-describedby="basic-addon1">
         <button type="button" class="btn btn-warning">들어가기</button>
         <button type="button" class="btn btn-info" @click="searchRoomView = false">취소</button>
       </div>
@@ -126,7 +126,7 @@ export default {
         if(confirm("강퇴 하시겠습니까?") == true){
           this.socket.emit('kick', id);
         }else{
-          return ;
+          return;
         }
       }
     },
@@ -137,7 +137,7 @@ export default {
         location.href = "/#/"; 
         this.$router.go();
       }else{
-        return ;
+        return;
       }
     }
   }
