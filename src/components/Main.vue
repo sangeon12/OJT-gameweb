@@ -35,15 +35,19 @@
           <button type="button" class="btn btn-secondary" @click="logout">로그아웃</button>
         </div>
         <div class="roomList">
-          <div class="room" v-for="room in roomList" :key="room">{{room.roomName}}</div>
+          <div class="room" v-for="room in roomList" :key="room" @click="enterRoom(room.roomId)">
+            <div class="roomName">{{room.roomName}}/{{room.roomId}}</div>
+            <div class="selectGame">{{room.selectGame}}</div>
+            <div class="inUser">{{room.inUser}}/{{room.max}}</div>
+          </div>
         </div>
       </div>
 
       <div class="left">
-        <div class="title point" style="border-radius: 0px 10px 0px 0px;" @click="userListView">유저 리스트</div>
+        <div class="title point" style="border-radius: 0px 10px 0px 0px;" @click="userListView">유저</div>
 
         <div class="content">
-          <div class="userList">
+          <div class="userList" style="border-radius: 0px 0px 10px 0px;">
             <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}" @click="kick(user.id)">{{user.nickName}}</div>
           </div>
 
@@ -74,6 +78,7 @@ export default {
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
     this.socket.on('kickResult', data=>{if(this.socket.id === data){this.systemList = []; location.href = "/#/"; this.$router.go();}})
     this.socket.on('systemMsg', data=>{
+      if(this.roomIn) return;
       let chating = document.querySelector('.chating');
       let systemMsg = document.createElement('div');
       systemMsg.classList.add('systemMsg');
@@ -97,6 +102,7 @@ export default {
       searchRoomView:false,
       createRoomName:'',
       createRoomPassword:'',
+      createRoomSelectGame:'',
       roomIn:false,
       roomList:[]
     }
@@ -150,6 +156,25 @@ export default {
         return;   
       }
       this.socket.emit(selectGame, {roomName:this.createRoomName, roomPassword:this.createRoomPassword, selectGame:selectGame});
+      this.roomIn = true;
+      this.createRoomName = '';
+      this.createRoomPassword = '';
+      location.href = "/#/"+selectGame;
+    },
+    enterRoom(roomId){
+      let room = this.roomList.find(x => x.roomId === roomId);
+      if(room.roomPassword !== ""){
+        alert('비밀번호를 입력해주세요.');
+        return;
+      }else{
+        if(confirm("방에들어가시겠습니까?") == true){
+          this.socket.emit(room.selectGame+'In', room.roomId);
+          this.roomIn = true;
+          location.href = "/#/"+room.selectGame;
+        }else{
+          return;
+        }
+      }
     }
   }
 }
@@ -261,6 +286,9 @@ export default {
   .room{
     background-color: #bdbdbd;
     border-radius: 5px;
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    cursor: pointer;
   }
 
   .left{
@@ -306,7 +334,7 @@ export default {
     position: absolute;
     height: 100%;
     display: grid;
-    grid-template-rows: 27px 11fr 1fr;
+    grid-template-rows: 27px 10fr 1fr;
     overflow: auto;
   }
 
