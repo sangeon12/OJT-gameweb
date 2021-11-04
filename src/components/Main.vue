@@ -30,8 +30,8 @@
       <div class="right">
         <div class="title" style="border-radius: 10px 0px 0px 0px;">방 리스트</div>
         <div class="roomMenu">
-          <button type="button" class="btn btn-primary" @click="createRoomView = true">방만들기</button>
-          <button type="button" class="btn btn-danger" @click="searchRoomView = true">방찾기</button>
+          <button type="button" class="btn btn-secondary" @click="createRoomView = true">방만들기</button>
+          <button type="button" class="btn btn-secondary" @click="searchRoomView = true">방찾기</button>
           <button type="button" class="btn btn-secondary" @click="logout">로그아웃</button>
         </div>
         <div class="roomList">
@@ -54,7 +54,10 @@
           <div class="publicChat">
               <div class="title">채팅</div>
               <div class="chating">
-                <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">{{chat.nickName}} : {{chat.msg}}<i class="fa-solid fa-m"></i></div>
+                <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}"> 
+                  <div class="systemChat" v-if="chat.id === 'SYSTEM'"><b>{{chat.msg}}</b></div>
+                  <div class="userChat" v-else>{{chat.nickName}} : {{chat.msg}}</div>
+                </div>
               </div>
               <div class="send">
                 <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
@@ -75,20 +78,9 @@ export default {
   mounted(){
     this.$j(".userList").hide();
     this.socket.on('userList', data=>{this.userList = data;});
+    this.socket.on('roomList', data=>{this.roomList = data});
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
     this.socket.on('kickResult', data=>{if(this.socket.id === data){this.systemList = []; location.href = "/#/"; this.$router.go();}})
-    this.socket.on('systemMsg', data=>{
-      if(this.roomIn) return;
-      let chating = document.querySelector('.chating');
-      let systemMsg = document.createElement('div');
-      systemMsg.classList.add('systemMsg');
-      systemMsg.innerHTML = data;
-      systemMsg.style.backgroundColor = "#95bd92"
-      systemMsg.style.boxShadow = "0px 2px 3px gray";
-      systemMsg.style.marginBottom = "8px";
-      chating.appendChild(systemMsg);
-      this.scroll();
-    });
     this.socket.on('roomList', data=>{this.roomList = data});
   },
   data(){
@@ -117,7 +109,6 @@ export default {
       }
     },
     sendMsg(){
-      if(this.msgInput === "") return;
       this.socket.emit('sendMsg', this.msgInput);
       this.msgInput = '';
     },
@@ -141,7 +132,6 @@ export default {
     },
     logout(){
       if(confirm("로그아웃 하시겠습니까?") == true){
-        this.systemList = [];
         this.socket.emit('logout', this.socket.id);
         location.href = "/#/"; 
         this.$router.go();
@@ -203,6 +193,7 @@ export default {
     text-align: center;
     border-radius: 5px;
     box-shadow: 3px 3px 3px gray;
+    border: 1px solid #cad4d8;
   }
 
   .createRoom > h4{
@@ -225,6 +216,7 @@ export default {
     text-align: center;
     border-radius: 5px;
     box-shadow: 3px 3px 3px gray;
+    border: 1px solid #cad4d8;
   }
 
   .searchRoom > h4{
@@ -335,7 +327,7 @@ export default {
     height: 100%;
     display: grid;
     grid-template-rows: 27px 10fr 1fr;
-    overflow: auto;
+    overflow: auto; 
   }
 
   .chating{
@@ -350,11 +342,12 @@ export default {
     background-color: #cccccc;
     margin-bottom: 8px;
     box-shadow: 0px 2px 3px gray;
+    word-break:break-all;
   }
 
   .chat.my{
     background-color: #e2bc3d;
-  }
+  }         
 
   /* .systemMsg{
     background-color: #95bd92;

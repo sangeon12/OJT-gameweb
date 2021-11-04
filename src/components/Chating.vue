@@ -11,7 +11,7 @@
                 <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}">{{user.nickName}}</div>
             </div>
             <div class="menu">
-                <div class="out">나가기</div>
+                <button type="button" class="btn btn-outline-dark" id="out" @click="outRoom">나가기</button>
             </div>
         </div>
 
@@ -19,7 +19,10 @@
             <div class="publicChat">
                 <div class="title">채팅</div>
                 <div class="chating">
-                <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">{{chat.nickName}} : {{chat.msg}}<i class="fa-solid fa-m"></i></div>
+                <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">
+                    <div class="systemChat" v-if="chat.id === 'SYSTEM'"><b>{{chat.msg}}</b></div>
+                    <div class="userChat" v-else>{{chat.nickName}} : {{chat.msg}}</div>
+                </div>
               </div>
               <div class="send">
                 <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
@@ -34,8 +37,8 @@
 export default {
     name: 'Chating',
     mounted(){
-        this.socket.on('userList', data => {this.userList = data});
-        this.socket.on('roomList', data => {this.roomInfo = data});
+        this.socket.on('chating', data => {this.userList = data});
+        this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('chatingAwesome', data =>{this.chatList.push(data); this.scroll();});
     },
     data(){
@@ -61,7 +64,7 @@ export default {
             }, 10);
         },
         outRoom(){
-            if(confirm("정말 나가시겠습니까?") == ture){
+            if(confirm("정말 나가시겠습니까?") == true){
                 this.socket.emit('roomOut');
                 location.href = "/#/main";
             }else{
@@ -119,20 +122,16 @@ export default {
         background-color: #e0e0e0;
         margin-bottom: 5px;
         box-shadow: 0px 3px 5px gray;
+        cursor: pointer;
     }
 
     .user.my{
         background-color: #e2bc3d;
     }
 
-    .out{
-        background-color: #555555;
-        color: white;
+    #out{
         height: 38px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 100%;
     }
 
     .left{
@@ -160,6 +159,7 @@ export default {
         background-color: #cccccc;
         margin-bottom: 8px;
         box-shadow: 0px 2px 3px gray;
+        word-break:break-all;
     }
 
     .chat.my{
