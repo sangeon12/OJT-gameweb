@@ -28,7 +28,7 @@ let adminOn = false;//관리자 접속 여부
 let roomId = 0;
 let roomList = [];//방목록
 let chatingInUser = [];//채팅방 참여자 목록
-let endwordInUser = [];//끝말잇기게임 참여자 목록
+let endWordInUser = [];//끝말잇기게임 참여자 목록
 let mafiaInUser = [];//마피아게임 참여자 목록
 let log = [];
 
@@ -84,7 +84,7 @@ io.on("connect", socket =>{
     });
 
     socket.on('sendMsg', data =>{   
-        if(data === "" || nullCheck.exec(data) || data.length > 200) return;
+        if(data === "" || data.length > 200) return;
         let sendUser = userList.find(x => x.id === socket.id);
         io.emit('awesome', {id:sendUser.id, nickName:sendUser.nickName, msg:data});
     }); 
@@ -101,10 +101,11 @@ io.on("connect", socket =>{
         roomList.push({roomName:data.roomName, roomPassword:data.roomPassword, selectGame:data.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0});
         io.emit('roomList', roomList);
         let user = userList.find(x => x.id === socket.id);
-        chatingInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId});
+        chatingInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId, order:0});
         socket.join(roomId);
         roomListView(roomId, true);
         systemMsg(user.nickName+'님이 방을 만들었습니다.', roomId);
+        console.log(io.of("/").adapter.rooms.get(roomId).values().next().value);
         roomId++;
     });
 
@@ -114,9 +115,11 @@ io.on("connect", socket =>{
         socket.join(data);
         roomListView(data, true);
         systemMsg(user.nickName+'님이 들어왔습니다.', data);
+        console.log(io.of("/").adapter.rooms.get(data));
     });
 
     socket.on('chatingMsg', data =>{
+        if(data,msg === "" || data.msg.length > 200) return;
         let sendUser = userList.find(x => x.id === socket.id);
         io.to(data.roomId).emit('chatingAwesome', {id:sendUser.id, nickName:sendUser.nickName, msg:data.msg});
     });
@@ -132,7 +135,7 @@ io.on("connect", socket =>{
     }
 
     function systemMsg(msg, id){
-        console.log(msg);
+        console.log(msg, socket.id);
         log.push(msg);
         let roomInfo = roomList.find(x => x.roomId === id);
         switch(id){
@@ -154,18 +157,22 @@ io.on("connect", socket =>{
             });
         }
         if(inOut) roomInfo.inUser++;
-        else roomInfo.inUser--;
+        else{
+            roomInfo.inUser--;
+            if(roomInfo.inUser === 0) roomList.splice(x => x.roomId === roomInfo.roomId);
+            // else if(roomInfo.host === id)
+        }
         io.to(id).emit('roomInfo', roomInfo);
         io.to(id).emit(roomInfo.selectGame, roomUserList);
         io.emit('roomList', roomList);
     }
 
     function roomOut(id){
-        let roomOutUser;
-        let idx;
-        if(chatingInUser.findIndex(x => x.id === id) >= 0){
-            idx = chatingInUser.findIndex(x => x.id === id);
-            roomOutUser = chatingInUser.splice(idx, 1)[0];
+        let chatingOutUser = chatingInUser.findIndex(x => x.id === id);
+        let endWordOutUser = endWordInUser.findIndex(x => x.id === id);
+        let mafiaOutUser = mafiaInUser.findIndex(x => x.id === id);
+        if(chatingOutUser >= 0){
+            roomOutUser = chatingInUser.splice(chatingInUser.findIndex(x => x.id === id), 1)[0];
             socket.leave(roomOutUser.roomId);
             systemMsg(roomOutUser.nickName + '님이 나가셨습니다.', roomOutUser.roomId);
             roomListView(roomOutUser.roomId, false);
