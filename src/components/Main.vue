@@ -80,7 +80,7 @@ export default {
     this.socket.on('userList', data=>{this.userList = data;});
     this.socket.on('roomList', data=>{this.roomList = data});
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
-    this.socket.on('kickResult', data=>{if(this.socket.id === data){this.systemList = []; location.href = "/#/"; this.$router.go();}})
+    this.socket.on('kickResult', ()=>{location.href = "/#/"; this.$router.go();})
     this.socket.on('roomList', data=>{this.roomList = data});
   },
   data(){
@@ -113,7 +113,6 @@ export default {
       this.msgInput = '';
     },
     scroll() {
-      if(this.roomIn) return;
       const msgBox = document.querySelector(".chating");
         let scrollInterval = setInterval(() => {  
         msgBox.scrollTop = msgBox.scrollHeight;
@@ -123,7 +122,7 @@ export default {
     kick(id){
       if(this.socket.id === id) return;
       if(this.userList.findIndex(x => x.id === this.socket.id && x.admin) >= 0){
-        if(confirm("강퇴 하시겠습니까?") == true){
+        if(confirm("추방 하시겠습니까?") == true){
           this.socket.emit('kick', id);
         }else{
           return;
@@ -152,18 +151,24 @@ export default {
       location.href = "/#/"+selectGame;
     },
     enterRoom(roomId){
-      let room = this.roomList.find(x => x.roomId === roomId);
-      if(room.roomPassword !== ""){
-        alert('비밀번호를 입력해주세요.');
-        return;
-      }else{
-        if(confirm("방에들어가시겠습니까?") == true){
-          this.socket.emit(room.selectGame+'In', room.roomId);
-          this.roomIn = true;
-          location.href = "/#/"+room.selectGame;
-        }else{
+      let roomInfo = this.roomList.find(x => x.roomId === roomId);
+      if(roomInfo.inUser === roomInfo.max){
+          alert('방에 빈자리가 없습니다.');
           return;
+      }
+      if(roomInfo.roomPassword !== ""){
+        let passwordAlert = prompt( '비밀번호를 입력해주세요.', ''); 
+        if(passwordAlert !== roomInfo.roomPassword){
+          alert('비밀번호가 틀렸습니다.');
+          return; 
         }
+      }
+      if(confirm("방에들어가시겠습니까?") == true){
+            this.socket.emit(roomInfo.selectGame+'In', roomInfo.roomId);
+            this.roomIn = true;
+            location.href = "/#/"+roomInfo.selectGame;
+      }else{
+            return;
       }
     }
   }

@@ -8,7 +8,7 @@
             </div>
             <div class="title">유저</div>
             <div class="userList">
-                <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}">{{user.nickName}}</div>
+                <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}" @click="kick(user.id)">{{user.nickName}}<div class="host" v-if="user.id === roomInfo.host">(방장)</div></div>
             </div>
             <div class="menu">
                 <button type="button" class="btn btn-outline-dark" id="out" @click="outRoom">나가기</button>
@@ -40,6 +40,7 @@ export default {
         this.socket.on('chating', data => {this.userList = data});
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('chatingAwesome', data =>{this.chatList.push(data); this.scroll();});
+        this.socket.on('kickChatingResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
     },
     data(){
         return{
@@ -69,6 +70,16 @@ export default {
                 location.href = "/#/main";
             }else{
                 return;
+            }
+        },
+        kick(id){
+            if(id === this.socket.id || this.userList.findIndex(x => x.id === id && x.admin) >= 0) return;
+            if(this.socket.id === this.roomInfo.host || this.userList.findIndex(x => x.id === this.socket.id && x.admin) >= 0){
+                if(confirm("추방 하시겠습니까?") == true){
+                    this.socket.emit('kickChating', id);
+                }else{
+                    return;
+                }
             }
         }
     }

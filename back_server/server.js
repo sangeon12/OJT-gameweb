@@ -58,8 +58,6 @@ app.post('/checkNickname', async (req, res) =>{
 });
 
 io.on("connect", socket =>{
-    console.log(socket.id);
-
     socket.on('disconnect', ()=>{
         outUser(socket.id, '님 접송종료', false);
         roomOut(socket.id);
@@ -98,14 +96,13 @@ io.on("connect", socket =>{
     });
 
     socket.on('chating', data=>{
-        roomList.push({roomName:data.roomName, roomPassword:data.roomPassword, selectGame:data.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0});
+        roomList.push({roomName:data.roomName, roomPassword:data.roomPassword, selectGame:data.selectGame, roomId:roomId , host:socket.id, max:4, inUser:0});
         io.emit('roomList', roomList);
         let user = userList.find(x => x.id === socket.id);
-        chatingInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId, order:0});
+        chatingInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId});
         socket.join(roomId);
         roomListView(roomId, true);
         systemMsg(user.nickName+'님이 방을 만들었습니다.', roomId);
-        console.log(io.of("/").adapter.rooms.get(roomId).values().next().value);
         roomId++;
     });
 
@@ -115,13 +112,26 @@ io.on("connect", socket =>{
         socket.join(data);
         roomListView(data, true);
         systemMsg(user.nickName+'님이 들어왔습니다.', data);
-        console.log(io.of("/").adapter.rooms.get(data));
     });
 
     socket.on('chatingMsg', data =>{
-        if(data,msg === "" || data.msg.length > 200) return;
+        if(data.msg === "" || data.msg.length > 200) return;
         let sendUser = userList.find(x => x.id === socket.id);
         io.to(data.roomId).emit('chatingAwesome', {id:sendUser.id, nickName:sendUser.nickName, msg:data.msg});
+    });
+
+    socket.on('kickChating', data =>{
+        roomKick(data);
+    });
+
+    socket.on('leaveRoom', data=>{
+        socket.leave(data);
+        let roomInfo = roomList.find(x => x.roomId === data);
+        if(roomInfo.host === socket.id){
+            let socketRooms = io.of("/").adapter.rooms.get(data).values();
+            roomInfo.host = socketRooms.next().value;
+        } 
+        roomListView(roomInfo.roomId, false);
     });
 
     function outUser(id, msg, kick){
@@ -131,7 +141,7 @@ io.on("connect", socket =>{
         if(outUser.admin) adminOn = false;
         systemMsg(outUser.nickName + msg, null);
         io.emit('userList', userList);
-        if(kick) io.emit('kickResult', id);
+        if(kick) io.to(id).emit('kickResult');
     }
 
     function systemMsg(msg, id){
@@ -160,7 +170,10 @@ io.on("connect", socket =>{
         else{
             roomInfo.inUser--;
             if(roomInfo.inUser === 0) roomList.splice(x => x.roomId === roomInfo.roomId);
-            // else if(roomInfo.host === id)
+            else if(roomInfo.host === socket.id){
+                let socketRooms = io.of("/").adapter.rooms.get(roomInfo.roomId).values();
+                roomInfo.host = socketRooms.next().value;
+            } 
         }
         io.to(id).emit('roomInfo', roomInfo);
         io.to(id).emit(roomInfo.selectGame, roomUserList);
@@ -172,10 +185,21 @@ io.on("connect", socket =>{
         let endWordOutUser = endWordInUser.findIndex(x => x.id === id);
         let mafiaOutUser = mafiaInUser.findIndex(x => x.id === id);
         if(chatingOutUser >= 0){
-            roomOutUser = chatingInUser.splice(chatingInUser.findIndex(x => x.id === id), 1)[0];
+            roomOutUser = chatingInUser.splice(chatingOutUser, 1)[0];
             socket.leave(roomOutUser.roomId);
             systemMsg(roomOutUser.nickName + '님이 나가셨습니다.', roomOutUser.roomId);
             roomListView(roomOutUser.roomId, false);
+        }
+    }
+
+    function roomKick(id){
+        let chatingOutUser = chatingInUser.findIndex(x => x.id === id);
+        let endWordOutUser = endWordInUser.findIndex(x => x.id === id);
+        let mafiaOutUser = mafiaInUser.findIndex(x => x.id === id);
+        if(chatingOutUser >= 0){
+            roomOutUser = chatingInUser.splice(chatingOutUser, 1)[0];
+            io.to(id).emit('kickChatingResult');
+            systemMsg(roomOutUser.nickName + '님이 추방당하셨습니다.', roomOutUser.roomId);
         }
     }
 });
