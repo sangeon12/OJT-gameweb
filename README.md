@@ -1,4 +1,4 @@
-# vue-template
+# OJT-project
 
 > A Vue.js project
 
