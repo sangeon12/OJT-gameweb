@@ -3,7 +3,7 @@ import Router from 'vue-router'
 import Login from '@/components/Login'
 import Main from '@/components/Main'
 import Chating from '@/components/Chating'
-import EndWordWait from '@/components/EndWordWait'
+import EndWord from '@/components/EndWord'
 
 Vue.use(Router)
 
@@ -25,9 +25,9 @@ export default new Router({
       component: Chating
     },
     {
-      path: '/endwordwait',
-      name: 'EndWordWait',
-      component: EndWordWait
+      path: '/endword',
+      name: 'EndWord',
+      component: EndWord
     }
   ]
 })
