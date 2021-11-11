@@ -189,6 +189,7 @@ io.on("connect", socket =>{
             socket.leave(roomOutUser.roomId);
             systemMsg(roomOutUser.nickName + '님이 나가셨습니다.', roomOutUser.roomId);
             roomListView(roomOutUser.roomId, false);
+            socket.emit('userList', userList);
         }
     }
 
@@ -199,6 +200,7 @@ io.on("connect", socket =>{
         if(chatingOutUser >= 0){
             roomOutUser = chatingInUser.splice(chatingOutUser, 1)[0];
             io.to(id).emit('kickChatingResult');
+            io.to(id).emit('userList', userList);
             systemMsg(roomOutUser.nickName + '님이 추방당하셨습니다.', roomOutUser.roomId);
         }
     }
