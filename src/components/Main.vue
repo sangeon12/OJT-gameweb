@@ -80,8 +80,9 @@ export default {
     this.socket.on('userList', data=>{this.userList = data;});
     this.socket.on('roomList', data=>{this.roomList = data});
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
-    this.socket.on('kickResult', ()=>{location.href = "/#/"; this.$router.go();})
+    this.socket.on('kickResult', ()=>{this.$router.go();})
     this.socket.on('roomList', data=>{this.roomList = data});
+    if (document.readyState == 'loading') {location.href = '/#/';}
   },
   data(){
     return{
@@ -103,9 +104,9 @@ export default {
     userListView(){
       this.userView = !this.userView;
       if(this.userView){
-        this.$j(".userList").stop().slideDown();
+        this.$j(".userList").stop().slideDown(250);
       }else{
-        this.$j(".userList").stop().slideUp();
+        this.$j(".userList").stop().slideUp(250);
       }
     },
     sendMsg(){
@@ -345,7 +346,7 @@ export default {
 
   .chat{
     background-color: #cccccc;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     box-shadow: 0px 2px 3px gray;
     word-break:break-all;
   }

@@ -41,6 +41,7 @@ export default {
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('chatingAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.on('kickChatingResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        if (document.readyState == 'loading') {location.href = '/#/';}
     },
     data(){
         return{
