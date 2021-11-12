@@ -169,7 +169,7 @@ export default {
 
     .chat{
         background-color: #cccccc;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         box-shadow: 0px 2px 3px gray;
         word-break:break-all;
     }

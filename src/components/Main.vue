@@ -20,8 +20,8 @@
     <transition name="tr">
       <div class="searchRoom" v-if="searchRoomView">
         <h4>방찾기</h4>
-        <input type="text" class="form-control" placeholder="방번호" aria-label="roomname" aria-describedby="basic-addon1">
-        <button type="button" class="btn btn-warning">들어가기</button>
+        <input type="text" class="form-control" v-model="searchRoomId" placeholder="방번호" aria-label="roomname" aria-describedby="basic-addon1">
+        <button type="button" class="btn btn-warning" @click="searchRoom">들어가기</button>
         <button type="button" class="btn btn-info" @click="searchRoomView = false">취소</button>
       </div>
     </transition>
@@ -90,14 +90,15 @@ export default {
       socket:this.$socket,
       userList:[],
       chatList:[],
+      roomList:[],
       msgInput:'',
       createRoomView:false,
-      searchRoomView:false,
       createRoomName:'',
       createRoomPassword:'',
       createRoomSelectGame:'',
-      roomIn:false,
-      roomList:[]
+      searchRoomView:false,
+      searchRoomId:''
+      
     }
   },
   methods:{
@@ -133,7 +134,6 @@ export default {
     logout(){
       if(confirm("로그아웃 하시겠습니까?") == true){
         this.socket.emit('logout', this.socket.id);
-        location.href = "/#/"; 
         this.$router.go();
       }else{
         return;
@@ -146,7 +146,6 @@ export default {
         return;   
       }
       this.socket.emit(selectGame, {roomName:this.createRoomName, roomPassword:this.createRoomPassword, selectGame:selectGame});
-      this.roomIn = true;
       this.createRoomName = '';
       this.createRoomPassword = '';
       location.href = "/#/"+selectGame;
@@ -166,11 +165,19 @@ export default {
       }
       if(confirm("방에들어가시겠습니까?") == true){
             this.socket.emit(roomInfo.selectGame+'In', roomInfo.roomId);
-            this.roomIn = true;
             location.href = "/#/"+roomInfo.selectGame;
       }else{
             return;
       }
+    },
+    searchRoom(){
+      const searchRoomId = parseInt(this.searchRoomId);
+      const roomInfo = this.roomList.find(x => x.roomId === searchRoomId);
+      if(roomInfo === undefined){
+        alert('방이 존재하지않습니다.');
+        return;
+      }
+      this.enterRoom(searchRoomId);
     }
   }
 }
@@ -188,7 +195,6 @@ export default {
     align-items: center;
     justify-content: center;
   }
-
 
   .createRoom{
     position: absolute;
@@ -353,13 +359,7 @@ export default {
 
   .chat.my{
     background-color: #e2bc3d;
-  }         
-
-  /* .systemMsg{
-    background-color: #95bd92;
-    box-shadow: 0px 2px 3px gray;
-    margin-bottom: 8px;
-  } */
+  }
 
   .send{
     display: grid;

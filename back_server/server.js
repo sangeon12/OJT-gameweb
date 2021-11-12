@@ -22,39 +22,48 @@ app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
 
-let userList = [];//현재 접속한 유저 리스트
-let adminPassword = 'admin';//관리자 패스워드
-let adminOn = false;//관리자 접속 여부
+let userList = []; //현재 접속한 유저 리스트
+let adminPassword = 'admin'; //관리자 패스워드
+let adminOn = false; //관리자 접속 여부
 let roomId = 0;
-let roomList = [];//방목록
-let chatingInUser = [];//채팅방 참여자 목록
-let endWordInUser = [];//끝말잇기게임 참여자 목록
-let mafiaInUser = [];//마피아게임 참여자 목록
-let log = [];
+let roomList = []; //방목록
+let chatingInUser = []; //채팅방 참여자 목록
+let endWordInUser = []; //끝말잇기게임 참여자 목록
+let mafiaInUser = []; //마피아게임 참여자 목록
+let log = []; //시스템 메시지가 저장되는 리스트
 
-const nullCheck = /\s/;//공백 체크
+const nullCheck = /\s/; //공백 체크
 
-app.post('/checkNickname', async (req, res) =>{
+app.post('/checkNickname', async (req, res) =>{ //사용하지 못하는 닉네임을 체크
     const nickName = req.body.nickName;
     if(nickName === "" || nullCheck.exec(nickName) || nickName.indexOf('ㅤ') >= 0){
-        res.json(0);
+        res.json(0); //닉네임에 공백이 포함될 때
         return;
     }
     if(userList.findIndex(x => x.nickName === nickName) >= 0){
-        res.json(1);
+        res.json(1); //닉네임이 중복될 때
         return;
     }
     if(nickName.indexOf('임상언') >= 0 || nickName.indexOf('관리자') >= 0){
-        res.json(2);
+        res.json(2); //닉네임에 관리자, 임상언이 포합될 때
         return;
     }
     if(nickName === adminPassword){
         if(adminOn){
-            res.json(3);
+            res.json(3); //관리자가 이미 접속중일 때
             return;
         }
     }
-    res.json(4);
+    res.json(4); //아무 이상없을 떄
+});
+
+app.post('/checkRoom', async (req, res) => {
+    const getRoomId = req.body.getRoomId;
+    if(roomList.find(x => x.roomId === getRoomId) === null){
+        res.json(0); //방이 존재하지 않을 때
+        return;
+    }
+    res.json(1); //방이 존재할 때
 });
 
 io.on("connect", socket =>{
@@ -134,7 +143,7 @@ io.on("connect", socket =>{
         roomListView(roomInfo.roomId, false);
     });
 
-    function outUser(id, msg, kick){
+    function outUser(id, msg, kick){ //소켓 id, 시스템 메시지, 추방 여부등을 받아 유저를 로그아웃 시키는 함수
         let idx = userList.findIndex(x => x.id === id);
         if(idx < 0) return;
         let outUser = userList.splice(idx, 1)[0];
@@ -144,56 +153,56 @@ io.on("connect", socket =>{
         if(kick) io.to(id).emit('kickResult');
     }
 
-    function systemMsg(msg, id){
+    function systemMsg(msg, getRoomId){ //시스템 메시지, 방 id를 받아 시스템 메시지를 client에 보내는 함수 
         console.log(msg, socket.id);
         log.push(msg);
-        let roomInfo = roomList.find(x => x.roomId === id);
-        switch(id){
+        let roomInfo = roomList.find(x => x.roomId === getRoomId);
+        switch(getRoomId){
             case null:
                 io.emit('awesome', {id:'SYSTEM', nickName:'SYSTEM', msg:msg});
                 break;
             default:
-                io.to(id).emit(roomInfo.selectGame+'Awesome', {id:'SYSTEM', nickName:'SYSTEM', msg:msg});   
+                io.to(getRoomId).emit(roomInfo.selectGame+'Awesome', {id:'SYSTEM', nickName:'SYSTEM', msg:msg});   
                 break;
         }
     }
 
-    function roomListView(id, inOut){
+    function roomListView(getRoomId, inOut){ //방정보를 업데이트하고 방정보를 client에 보내는 함수
         let roomUserList = [];
-        let roomInfo = roomList.find(x => x.roomId === id);
+        let roomInfo = roomList.find(x => x.roomId === getRoomId);
         if(roomInfo.selectGame === 'chating'){
             chatingInUser.forEach((e)=>{
-                if(e.roomId === id) roomUserList.push(e);
+                if(e.roomId === getRoomId) roomUserList.push(e);
             });
         }
         if(inOut) roomInfo.inUser++;
         else{
             roomInfo.inUser--;
-            if(roomInfo.inUser === 0) roomList.splice(x => x.roomId === roomInfo.roomId);
+            if(roomInfo.inUser === 0) roomList.splice(x => x.roomId === getRoomId);
             else if(roomInfo.host === socket.id){
-                let socketRooms = io.of("/").adapter.rooms.get(roomInfo.roomId).values();
+                let socketRooms = io.of("/").adapter.rooms.get(getRoomId).values();
                 roomInfo.host = socketRooms.next().value;
             } 
         }
-        io.to(id).emit('roomInfo', roomInfo);
-        io.to(id).emit(roomInfo.selectGame, roomUserList);
+        io.to(getRoomId).emit('roomInfo', roomInfo);
+        io.to(getRoomId).emit(roomInfo.selectGame, roomUserList);
         io.emit('roomList', roomList);
     }
 
-    function roomOut(id){
+    function roomOut(id){ //방을 나갈 때 실행되는 함수
         let chatingOutUser = chatingInUser.findIndex(x => x.id === id);
         let endWordOutUser = endWordInUser.findIndex(x => x.id === id);
         let mafiaOutUser = mafiaInUser.findIndex(x => x.id === id);
         if(chatingOutUser >= 0){
             roomOutUser = chatingInUser.splice(chatingOutUser, 1)[0];
             socket.leave(roomOutUser.roomId);
-            systemMsg(roomOutUser.nickName + '님이 나가셨습니다.', roomOutUser.roomId);
-            roomListView(roomOutUser.roomId, false);
             socket.emit('userList', userList);
+            roomListView(roomOutUser.roomId, false);
+            systemMsg(roomOutUser.nickName + '님이 나가셨습니다.', roomOutUser.roomId);
         }
     }
 
-    function roomKick(id){
+    function roomKick(id){ //방에서 추방 당했을 때 실행되는 함수
         let chatingOutUser = chatingInUser.findIndex(x => x.id === id);
         let endWordOutUser = endWordInUser.findIndex(x => x.id === id);
         let mafiaOutUser = mafiaInUser.findIndex(x => x.id === id);
