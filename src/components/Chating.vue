@@ -1,6 +1,6 @@
 <template>
     <div id="chating">
-        <div class="right">
+        <div class="left">
             <div class="title">방정보</div>
             <div class="roomInfo">
                 <div class="roomName">{{roomInfo.roomName}}</div>
@@ -15,19 +15,19 @@
             </div>
         </div>
 
-        <div class="left">
+        <div class="right">
             <div class="publicChat">
                 <div class="title">채팅</div>
                 <div class="chating">
-                <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">
-                    <div class="systemChat" v-if="chat.id === 'SYSTEM'"><b>{{chat.msg}}</b></div>
-                    <div class="userChat" v-else>{{chat.nickName}} : {{chat.msg}}</div>
+                    <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}">
+                        <div class="systemChat" v-if="chat.id === 'SYSTEM'"><b>{{chat.msg}}</b></div>
+                        <div class="userChat" v-else>{{chat.nickName}} : {{chat.msg}}</div>
+                    </div>
+                </div>  
+                <div class="send">
+                    <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
+                    <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
                 </div>
-              </div>
-              <div class="send">
-                <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
-                <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
-              </div>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@ export default {
         this.socket.on('chating', data => {this.userList = data});
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('chatingAwesome', data =>{this.chatList.push(data); this.scroll();});
-        this.socket.on('kickChatingResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        this.socket.on('kickResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
         if (document.readyState == 'loading') {location.href = '/#/';}
     },
     data(){
@@ -77,7 +77,7 @@ export default {
             if(id === this.socket.id || this.userList.findIndex(x => x.id === id && x.admin) >= 0) return;
             if(this.socket.id === this.roomInfo.host || this.userList.findIndex(x => x.id === this.socket.id && x.admin) >= 0){
                 if(confirm("추방 하시겠습니까?") == true){
-                    this.socket.emit('kickChating', id);
+                    this.socket.emit('kickRoom', id);
                 }else{
                     return;
                 }
@@ -107,7 +107,7 @@ export default {
         height: 22px;
     }
 
-    .right{
+    .left{
         display: grid;
         grid-template-rows: 27px 1fr 27px 6fr 38px;
         overflow: auto;
@@ -146,7 +146,7 @@ export default {
         width: 100%;
     }
 
-    .left{
+    .right{
         width: 100%;
         height: 100%;
         overflow: auto;

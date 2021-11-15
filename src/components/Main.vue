@@ -27,7 +27,7 @@
     </transition>
 
     <div class="myContainer">
-      <div class="right">
+      <div class="left">
         <div class="title" style="border-radius: 10px 0px 0px 0px;">방 리스트</div>
         <div class="roomMenu">
           <button type="button" class="btn btn-secondary" @click="createRoomView = true">방만들기</button>
@@ -35,15 +35,19 @@
           <button type="button" class="btn btn-secondary" @click="logout">로그아웃</button>
         </div>
         <div class="roomList">
-          <div class="room" v-for="room in roomList" :key="room" @click="enterRoom(room.roomId)">
-            <div class="roomName">{{room.roomName}}/{{room.roomId}}</div>
-            <div class="selectGame">{{room.selectGame}}</div>
-            <div class="inUser">{{room.inUser}}/{{room.max}}</div>
+          <div class="rooms">
+            <div class="room" v-for="room in roomList" :key="room" @click="enterRoom(room.roomId)">
+              <div class="roomName">{{room.roomName}}({{room.roomId}}) 
+                <i class="fas fa-lock" v-if="room.roomPassword !== ''"></i><i class="fas fa-lock-open" v-else></i>
+              </div>
+              <div class="selectGame">{{room.selectGame}}</div>
+              <div class="inUser">{{room.inUser}}/{{room.max}}</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="left">
+      <div class="right">
         <div class="title point" style="border-radius: 0px 10px 0px 0px;" @click="userListView">유저</div>
 
         <div class="content">
@@ -262,7 +266,7 @@ export default {
     cursor: pointer
   }
 
-  .right{
+  .left{
     display: grid;
     grid-template-rows: 27px 1fr 10fr;
   }
@@ -275,6 +279,14 @@ export default {
   }
 
   .roomList{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .rooms{
+    width: 98%;
+    height: 98%;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
@@ -283,7 +295,7 @@ export default {
     overflow-y: scroll;
     scrollbar-width: none;
   }
-  .roomList::-webkit-scrollbar {
+  .rooms::-webkit-scrollbar {
     display: none;
   }
 
@@ -292,10 +304,11 @@ export default {
     border-radius: 5px;
     display: grid;
     grid-template-rows: 1fr 1fr 1fr;
+    text-align: center;
     cursor: pointer;
   }
 
-  .left{
+  .right{
     display: grid;
     grid-template-rows: 27px 1fr;
   }
