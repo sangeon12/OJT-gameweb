@@ -8,7 +8,7 @@
             </div>
             <div class="title">유저</div>
             <div class="userList">
-                <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}" @click="kick(user.id)">{{user.nickName}}<div class="host" v-if="user.id === roomInfo.host">(방장)</div></div>
+                <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}" @click="kick(user.id)">{{user.nickName}}<i class="fas fa-tag" v-if="user.id === roomInfo.host"></i></div>
             </div>
             <div class="menu">
                 <button type="button" class="btn btn-outline-dark" id="out" @click="outRoom">나가기</button>
@@ -39,8 +39,8 @@ export default {
     mounted(){
         this.socket.on('chating', data => {this.userList = data});
         this.socket.on('roomInfo', data => {this.roomInfo = data});
-        this.socket.on('chatingAwesome', data =>{this.chatList.push(data); this.scroll();});
-        this.socket.on('kickResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        this.socket.on('chatingAwesome', data =>{this.chatList.push(data);});
+        this.socket.once('chatingKickResult', data=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId);});
         if (document.readyState == 'loading') {location.href = '/#/';}
     },
     data(){

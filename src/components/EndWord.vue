@@ -5,7 +5,7 @@
             <div class="left">
                 <div class="title" style="border-radius : 10px 0px 0px 0px">방메뉴</div>
                 <div class="room-menu">
-                    <div class="room-info">방이름(0)</div>
+                    <div class="room-info">{{roomInfo.roomName}}({{roomInfo.roomId}})</div>
                     <select class="form-select" aria-label="Default select example" id="round">
                         <option selected>라운드</option>
                         <option value="1">1라운드</option>
@@ -19,21 +19,20 @@
                         <option value="3">90초</option>
                     </select>
                     <div class="room-button">
-                        <button type="button" class="btn btn-secondary">시작하기</button>
-                        <button type="button" class="btn btn-secondary">나가기</button>
+                        <button type="button" class="btn btn-secondary" v-if="roomInfo.host === socket.id">시작하기</button>
+                        <button type="button" class="btn btn-secondary" @click="ready" v-else>준비하기</button>
+                        <button type="button" class="btn btn-secondary" @click="outRoom">나가기</button>
                     </div>
                 </div>
                 <div class="title">유저</div>
                 <div class="user-list">
                     <div class="user-content">
-                        <div class="user"><i class="fas fa-user-times"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-times"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-times"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-times"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-times"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-times"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-check"></i>임상언</div>
-                        <div class="user"><i class="fas fa-user-times"></i> 임상언</div>
+                        <div class="user" v-for="user in  userList" :key="user" @click="kick(user.id)">
+                            <i class="fas fa-crown" v-if="roomInfo.host === user.id"></i>
+                            <i class="fas fa-user-times" v-else-if="!user.ready"></i>
+                            <i class="fas fa-user-check" v-else></i>
+                            {{user.nickName}}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -69,7 +68,8 @@ export default {
         this.socket.on('endword', data => {this.userList = data});
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
-        this.socket.on('kickResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        if (document.readyState == 'loading') {location.href = '/#/';}
     },
     data(){
         return{
@@ -111,6 +111,9 @@ export default {
                     return;
                 }
             }
+        },
+        ready(){
+
         }
     }
 }
@@ -177,11 +180,15 @@ export default {
         grid-template-rows: 4fr 1fr;
         text-align: center;
         align-items: center;
+        cursor: pointer;
     }
 
-    .wait-room > .left > .user-list > .user-content > .user > i{
-        margin-left: 15%;
+    .wait-room > .left > .user-list > .user-content > .user > i{    
         font-size: 70px;
+    }
+
+    .wait-room > .right{
+        overflow: auto;
     }
 
     .wait-room > .right > .public-chat{
@@ -201,7 +208,7 @@ export default {
 
     .wait-room > .right > .public-chat > .chating > .chat{
         background-color: #cccccc;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         box-shadow: 0px 2px 3px gray;
         word-break:break-all;
     }

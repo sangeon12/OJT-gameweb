@@ -86,7 +86,7 @@ export default {
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
     this.socket.on('kickResult', ()=>{this.$router.go();})
     this.socket.on('roomList', data=>{this.roomList = data});
-    if (document.readyState == 'loading') {location.href = '/#/';}
+    if (document.readyState == 'loading') location.href = '/#/';
   },
   data(){
     return{
@@ -119,6 +119,7 @@ export default {
       this.msgInput = '';
     },
     scroll() {
+      if(location.href !== 'http://localhost:7514/#/main') return;
       const msgBox = document.querySelector(".chating");
         let scrollInterval = setInterval(() => {  
         msgBox.scrollTop = msgBox.scrollHeight;
