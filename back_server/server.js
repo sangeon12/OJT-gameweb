@@ -90,7 +90,7 @@ io.on("connect", socket =>{
     socket.on('kick', data =>{
         outUser(data, '님이 추방당했습니다.', true);
     });
-
+//----------------------------------------------------------------------------------------------------------------
     socket.on('chating', data=>{
         let user = userList.find(x => x.id === socket.id);
         chatingInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId});
@@ -108,7 +108,7 @@ io.on("connect", socket =>{
         let sendUser = userList.find(x => x.id === socket.id);
         io.to(data.roomId).emit('chatingAwesome', {id:sendUser.id, nickName:sendUser.nickName, msg:data.msg});
     });
-
+//----------------------------------------------------------------------------------------------------------------
     socket.on('endword', data =>{
         let user = userList.find(x => x.id === socket.id);
         endWordInUser.push({id:socket.id, nickName:user.nickName, admin:user.admin, roomId:roomId, score:0, ready:true});
@@ -125,6 +125,20 @@ io.on("connect", socket =>{
         if(data.msg === "" || data.msg.length > 200) return;
         let sendUser = userList.find(x => x.id === socket.id);
         io.to(data.roomId).emit('endwordAwesome', {id:sendUser.id, nickName:sendUser.nickName, msg:data.msg});
+    });
+
+    socket.on('endwordReady', ()=>{
+        let user = endWordInUser.find(x => x.id === socket.id);
+        user.ready = !user.ready;
+        roomUserList = [];
+        endWordInUser.forEach((e) =>{
+            if(e.roomId === user.roomId) roomUserList.push(e);
+        });
+        io.to(user.roomId).emit('endwordList', roomUserList);
+    });
+
+    socket.on('endwordGameStart', ()=>{
+        io.emit('endwordGameStart');
     });
 
     socket.on('roomOut', () => {
@@ -145,7 +159,7 @@ io.on("connect", socket =>{
         roomListUpdata(roomInfo.roomId, false);
         io.to(socket.id).emit('userList', userList);
     });
-
+//----------------------------------------------------------------------------------------------------------------
     function createRoom(roomInfo, user){
         roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:4, inUser:0});
         io.emit('roomList', roomList);
@@ -210,7 +224,7 @@ io.on("connect", socket =>{
             } 
         }
         io.to(getRoomId).emit('roomInfo', roomInfo);
-        io.to(getRoomId).emit(roomInfo.selectGame, roomUserList);
+        io.to(getRoomId).emit(roomInfo.selectGame+'List', roomUserList);
         io.emit('roomList', roomList);
     }
 

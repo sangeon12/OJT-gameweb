@@ -37,10 +37,11 @@
 export default {
     name: 'Chating',
     mounted(){
-        this.socket.on('chating', data => {this.userList = data});
+        this.socket.removeAllListeners();
+        this.socket.on('chatingList', data => {this.userList = data});
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('chatingAwesome', data =>{this.chatList.push(data);});
-        this.socket.once('chatingKickResult', data=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId);});
+        this.socket.on('chatingKickResult', ()=>{location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId);});
         if (document.readyState == 'loading') {location.href = '/#/';}
     },
     data(){

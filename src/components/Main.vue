@@ -203,8 +203,8 @@ export default {
 
   .createRoom{
     position: absolute;
-    width: 35%;
-    height: 60%;
+    width: 25%;
+    height: 48%;
     z-index: 10;
     background-color: white;
     text-align: center;
@@ -214,7 +214,7 @@ export default {
   }
 
   .createRoom > h4{
-    margin-top: 5%;
+    margin-top: 10%;
     margin-bottom: 5%;
   }
 
@@ -226,8 +226,8 @@ export default {
 
   .searchRoom{
     position: absolute;
-    width: 35%;
-    height: 40%;
+    width: 25%;
+    height: 28%;
     z-index: 10;
     background-color: white;
     text-align: center;
