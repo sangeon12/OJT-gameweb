@@ -58,7 +58,17 @@
 
         <transition name="tr">
             <div class="play-room" v-if="game">
-                <div class="info">방이름(0) 1라운드</div>
+                <div class="title info" style="border-radius : 10px 10px 0px 0px">
+                    <h6>방이름(0)</h6>
+                    <h6>끝말잇기</h6>
+                    <h6>참여자2/8</h6>
+                    <h6>1라운드</h6>
+                    <h6>45초</h6>
+                </div>
+
+                <div class="guide">
+                    
+                </div>
             </div>
         </transition>
 
@@ -84,7 +94,7 @@ export default {
             userList:[],
             msgInput:'',
             chatList:[],
-            game:false
+            game:true
         }
     },
     methods:{
@@ -122,7 +132,7 @@ export default {
             this.socket.emit('endwordReady');
         },
         gameStart(){
-            if(this.userList.length < 1){
+            if(this.userList.length < 2){
                 alert('게임을 시작하려면 유저가 2명 이상이 필요합니다!');
                 return;
             }
@@ -152,6 +162,11 @@ export default {
         margin-bottom: 5px;
         height: 22px;
     }   
+
+    .title.info{
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    }
     
     select{
         width: 20%;

@@ -312,6 +312,7 @@ export default {
   .right{
     display: grid;
     grid-template-rows: 27px 1fr;
+    height: 100%;
   }
 
   .content{
