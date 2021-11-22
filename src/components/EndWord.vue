@@ -67,7 +67,79 @@
                 </div>
 
                 <div class="guide">
-                    
+                    <div class="content">
+                        <h6>드라이버</h6>
+                        <div class="word-time">
+                            <div class="end-word">드</div>
+                            <div class="time">
+                                <progress max="10" value="8"></progress>
+                                <div class="num">8</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="word-list">
+                    <div class="word">
+                        <div class="text">드라이버</div>
+                        <div class="meaning">나사를 조이는 도구</div>
+                    </div>
+                    <div class="word">
+                        <div class="text">버드</div>
+                        <div class="meaning">새</div>
+                    </div>
+                </div>
+
+                <div class="user-list">
+                    <div class="content">
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                        <div class="user">
+                            <i class="fas fa-user"></i>
+                            <div class="name">임상언</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="public-chat">
+                    <div class="title">채팅</div>
+                    <div class="chating">
+                        <div class="chat" v-for="chat in chatList" :key="chat" :class="{my:chat.id === socket.id}"> 
+                            <div class="systemChat" v-if="chat.id === 'SYSTEM'"><b>{{chat.msg}}</b></div>
+                            <div class="userChat" v-else>{{chat.nickName}} : {{chat.msg}}</div>
+                        </div>
+                    </div>
+                    <div class="send">
+                        <button type="button" class="btn btn-outline-dark" @click="sendMsg">나가기</button>
+                        <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
+                        <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -94,7 +166,8 @@ export default {
             userList:[],
             msgInput:'',
             chatList:[],
-            game:true
+            game:true,
+            wordList:[]
         }
     },
     methods:{
@@ -256,6 +329,86 @@ export default {
     .wait-room > .right > .public-chat > .send{
         display: grid;
         grid-template-columns: 9fr 1fr;
+    }
+/*-------------------------------------------------------------------------------------------------------- */
+    .play-room{
+        height: 100%;
+        display: grid;
+        grid-template-rows: 27px 3fr 2fr 3fr 5fr;
+    } 
+
+    .play-room > .guide{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .play-room > .guide > .content{
+        width: 50%;
+        height: 80%;
+        text-align: center;
+    }
+
+    .play-room > .guide > .content > .word-time{
+        background-color: #e0e0e0;
+        border-radius: 5px;
+    }
+    
+    .play-room > .guide > .content > .word-time > .time{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .play-room > .guide > .content > .word-time > .time > .num{
+        margin-left: 1%;
+    }
+
+    .play-room > .word-list{
+        display: flex;
+        align-items: center;
+    }
+
+    .play-room > .word-list > .word{
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        margin-left: 5px;
+        width: 20%;
+        height: 80%;
+        text-align: center;
+    }
+
+    .play-room > .user-list{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .play-room > .user-list > .content{
+        width: 98%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        grid-column-gap: 5px;
+        align-items: center;
+    }
+
+    .play-room > .user-list > .content > .user{
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        width: 100%;
+        height: 80%;
+    }
+
+    .play-room > .public-chat{
+        display: grid;
+        grid-template-rows: 27px 2fr 0.5fr;
+    }
+
+    .play-room > .public-chat > .send{
+        display: grid;
+        grid-template-columns: 1fr 6fr 1fr;
     }
 
     .tr-enter-active, .tr-leave-active{
