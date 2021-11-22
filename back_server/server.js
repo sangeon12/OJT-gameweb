@@ -54,7 +54,11 @@ app.post('/checkNickname', async (req, res) =>{ //사용하지 못하는 닉네�
             return;
         }
     }
-    res.json(4); //아무 이상없을 떄
+    if(nickName.length > 5){
+        res.json(4); //닉네임이 5글자를 넘을 때
+        return;
+    }
+    res.json(5); //아무 이상없을 떄
 });
 
 io.on("connect", socket =>{
@@ -161,7 +165,7 @@ io.on("connect", socket =>{
     });
 //----------------------------------------------------------------------------------------------------------------
     function createRoom(roomInfo, user){
-        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:4, inUser:0});
+        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0});
         io.emit('roomList', roomList);
         socket.join(roomId);
         roomListUpdata(roomId, true);
@@ -182,6 +186,7 @@ io.on("connect", socket =>{
         if(outUser.admin) adminOn = false;
         systemMsg(outUser.nickName + msg, null);
         io.emit('userList', userList);
+        roomOut(id);
         if(kick) io.to(id).emit('kickResult');
     }
 

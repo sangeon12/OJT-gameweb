@@ -1,8 +1,8 @@
 <template>
     <div id="endword">
 
-        <transition name="tr">
-            <div class="wait-room" v-if="!game">
+        <transition name="tr" mode="out-in">
+            <div class="wait-room" v-if="!game" key="wait-room">
                 <div class="left">
                     <div class="title" style="border-radius : 10px 0px 0px 0px">방메뉴</div>
                     <div class="room-menu">
@@ -54,10 +54,10 @@
                     </div>
                 </div>
             </div>
-        </transition>
 
-        <transition name="tr">
-            <div class="play-room" v-if="game">
+
+
+            <div class="play-room" v-if="game" key="play-room">
                 <div class="title info" style="border-radius : 10px 10px 0px 0px">
                     <h6>방이름(0)</h6>
                     <h6>끝말잇기</h6>
@@ -120,7 +120,7 @@
                             <i class="fas fa-user"></i>
                             <div class="name">임상언</div>
                         </div>
-                        <div class="user">
+                        <div class="user my now">
                             <i class="fas fa-user"></i>
                             <div class="name">임상언</div>
                         </div>
@@ -136,14 +136,13 @@
                         </div>
                     </div>
                     <div class="send">
-                        <button type="button" class="btn btn-outline-dark" @click="sendMsg">나가기</button>
+                        <button type="button" class="btn btn-outline-dark" @click="stopGame">나가기</button>
                         <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
                         <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
                     </div>
                 </div>
             </div>
         </transition>
-
     </div>
 </template>
 
@@ -166,7 +165,7 @@ export default {
             userList:[],
             msgInput:'',
             chatList:[],
-            game:true,
+            game:false,
             wordList:[]
         }
     },
@@ -205,7 +204,7 @@ export default {
             this.socket.emit('endwordReady');
         },
         gameStart(){
-            if(this.userList.length < 2){
+            if(this.userList.length < 1){
                 alert('게임을 시작하려면 유저가 2명 이상이 필요합니다!');
                 return;
             }
@@ -213,7 +212,12 @@ export default {
                 alert('준비를 안한 유저가 있습니다!');
                 return;
             }
+            this.chatList = [];
             this.socket.emit('endwordGameStart');
+        },
+        stopGame(){
+            this.chatList = [];
+            this.game = false;
         }
     }
 }
@@ -334,7 +338,7 @@ export default {
     .play-room{
         height: 100%;
         display: grid;
-        grid-template-rows: 27px 3fr 2fr 3fr 5fr;
+        grid-template-rows: 27px 3fr 2fr 2fr 5fr;
     } 
 
     .play-room > .guide{
@@ -372,10 +376,13 @@ export default {
     .play-room > .word-list > .word{
         background-color: #e0e0e0;
         border-radius: 5px;
-        margin-left: 5px;
+        margin-left: 10px;
         width: 20%;
         height: 80%;
+        display: grid;
+        grid-template-rows: 1fr 1fr;
         text-align: center;
+        align-items: center;
     }
 
     .play-room > .user-list{
@@ -399,11 +406,44 @@ export default {
         border-radius: 5px;
         width: 100%;
         height: 80%;
+        display: grid;
+        grid-template-rows: 2fr 1fr;
+        align-items: center;
+        text-align: center;
+    }
+
+    .play-room > .user-list > .content > .user.my.now{
+        box-shadow: 3px 3px 1px grey;
+        background-color: #9ad492;
+    }
+
+    .play-room > .user-list > .content > .user > i{
+        font-size: 25px;
     }
 
     .play-room > .public-chat{
         display: grid;
         grid-template-rows: 27px 2fr 0.5fr;
+        overflow: auto;
+    }
+
+    .play-room > .public-chat > .chating{
+        overflow-y: scroll;
+        scrollbar-width: none;
+    }
+    .play-room > .public-chat > .chating::-webkit-scrollbar {
+        display: none;
+    }
+
+    .play-room > .public-chat > .chating > .chat{
+        background-color: #cccccc;
+        margin-bottom: 4px;
+        box-shadow: 0px 2px 3px gray;
+        word-break:break-all;
+    }
+
+    .play-room > .public-chat > .chating > .chat.my{
+        background-color: #e2bc3d;
     }
 
     .play-room > .public-chat > .send{

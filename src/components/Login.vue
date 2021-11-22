@@ -38,6 +38,10 @@ export default {
                         this.nickName = '';
                         break;
                     case 4:
+                        alert('닉네임은 5글자를 넘을 수 없습니다.');
+                        this.nickName = '';
+                        break;
+                    case 5:
                         this.$socket.emit('login', this.nickName);
                         location.href = "/#/main"
                         break;

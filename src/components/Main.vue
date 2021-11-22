@@ -203,8 +203,8 @@ export default {
 
   .createRoom{
     position: absolute;
-    width: 25%;
-    height: 48%;
+    width: 30%;
+    height: 62%;
     z-index: 10;
     background-color: white;
     text-align: center;
@@ -226,8 +226,8 @@ export default {
 
   .searchRoom{
     position: absolute;
-    width: 25%;
-    height: 28%;
+    width: 30%;
+    height: 38%;
     z-index: 10;
     background-color: white;
     text-align: center;

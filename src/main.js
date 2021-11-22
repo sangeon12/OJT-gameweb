@@ -11,8 +11,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from 'axios';
 Vue.prototype.$axios = axios;
 
-// const socket = io();
-// Vue.prototype.$socket = socket;
+const socket = io();
+Vue.prototype.$socket = socket;
 
 import jQuery from 'jquery';
 Vue.prototype.$j = jQuery;

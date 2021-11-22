@@ -1,4 +1,4 @@
-# OJT-project
+# OJT-gameweb
 
 > A Vue.js project
 
