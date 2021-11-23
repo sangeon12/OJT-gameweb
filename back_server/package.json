@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "serve": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -14,9 +14,11 @@
   "dependencies": {
     "axios": "^0.23.0",
     "body-parser": "^1.19.0",
+    "cheerio": "^1.0.0-rc.10",
     "connect-history-api-fallback": "^1.6.0",
     "express": "^4.17.1",
     "nodemon": "^2.0.14",
+    "request": "^2.88.2",
     "socket.io": "^4.3.1"
   }
 }

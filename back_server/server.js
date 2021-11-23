@@ -21,6 +21,8 @@ app.use('/', indexRouter);
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
+const {getWord} = require('./searchWord.js');
+
 
 let userList = []; //현재 접속한 유저 리스트
 let adminPassword = 'admin'; //관리자 패스워드
@@ -141,8 +143,12 @@ io.on("connect", socket =>{
         io.to(user.roomId).emit('endwordList', roomUserList);
     });
 
-    socket.on('endwordGameStart', ()=>{
-        io.emit('endwordGameStart');
+    socket.on('endwordGameStart', data=>{
+        io.emit('endwordGameStart', data);
+    });
+
+    socket.on('searchWord', data =>{
+        resultWord(data.word, data.roomId);
     });
 
     socket.on('roomOut', () => {
@@ -177,17 +183,6 @@ io.on("connect", socket =>{
         socket.join(getRoomId);
         roomListUpdata(getRoomId, true);
         systemMsg(user.nickName+'님이 들어왔습니다.', getRoomId);
-    }
-
-    function outUser(id, msg, kick){ //소켓 id, 시스템 메시지, 추방 여부등을 받아 유저를 로그아웃 시키는 함수
-        let idx = userList.findIndex(x => x.id === id);
-        if(idx < 0) return;
-        let outUser = userList.splice(idx, 1)[0];
-        if(outUser.admin) adminOn = false;
-        systemMsg(outUser.nickName + msg, null);
-        io.emit('userList', userList);
-        roomOut(id);
-        if(kick) io.to(id).emit('kickResult');
     }
 
     function systemMsg(msg, getRoomId){ //시스템 메시지, 방 id를 받아 시스템 메시지를 client에 보내는 함수 
@@ -233,6 +228,17 @@ io.on("connect", socket =>{
         io.emit('roomList', roomList);
     }
 
+    function outUser(id, msg, kick){ //소켓 id, 시스템 메시지, 추방 여부등을 받아 유저를 로그아웃 시키는 함수
+        let idx = userList.findIndex(x => x.id === id);
+        if(idx < 0) return;
+        let outUser = userList.splice(idx, 1)[0];
+        if(outUser.admin) adminOn = false;
+        systemMsg(outUser.nickName + msg, null);
+        io.emit('userList', userList);
+        roomOut(id);
+        if(kick) io.to(id).emit('kickResult');
+    }
+
     function roomOut(id){ //방을 나갈 때 실행되는 함수
         let chatingOutUser = chatingInUser.findIndex(x => x.id === id);
         let endWordOutUser = endWordInUser.findIndex(x => x.id === id);
@@ -264,6 +270,12 @@ io.on("connect", socket =>{
             systemMsg(roomOutUser.nickName + '님이 추방당하셨습니다.', roomOutUser.roomId);
             io.to(id).emit('enwordKickResult');
         }
+    }
+
+    function resultWord(word, roomId){ //단어를 검색하는 함수
+        getWord(word).then((v) => {
+            io.to(roomId).emit('resultWord', v.result);
+        });
     }
 });
 

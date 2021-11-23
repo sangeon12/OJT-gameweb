@@ -86,7 +86,7 @@ export default {
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
     this.socket.on('kickResult', ()=>{this.$router.go();})
     this.socket.on('roomList', data=>{this.roomList = data});
-    if (document.readyState == 'loading') location.href = '/#/';
+    if(document.readyState == 'loading') location.href = '/#/';
   },
   data(){
     return{
@@ -146,7 +146,7 @@ export default {
     },
     createRoom(){
       const selectGame = document.querySelector("#selectGame").value;
-      if(this.createRoomName === "" || selectGame === ""){
+      if(this.createRoomName === "" || selectGame === "" || selectGame === "방종류"){
         alert("방 이름 또는 게임을 선택해주세요.");
         return;   
       }
@@ -270,6 +270,7 @@ export default {
   .left{
     display: grid;
     grid-template-rows: 27px 1fr 10fr;
+    overflow: auto;
   }
 
   .roomMenu{
@@ -283,24 +284,22 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow-y: scroll;
+    scrollbar-width: none;
+  }
+  .roomList::-webkit-scrollbar {
+    display: none;
   }
 
   .rooms{
     width: 98%;
-    height: 98%;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-    gap: 5px;
-    margin-top: 5px;
-    overflow-y: scroll;
-    scrollbar-width: none;
-  }
-  .rooms::-webkit-scrollbar {
-    display: none;
+    height: 98%; 
   }
 
   .room{
+    float: left;
+    margin-top: 5px;
+    margin-left: 5px;
     background-color: #bdbdbd;
     border-radius: 5px;
     display: grid;

@@ -7,18 +7,18 @@
                     <div class="title" style="border-radius : 10px 0px 0px 0px">방메뉴</div>
                     <div class="room-menu">
                         <div class="room-info">{{roomInfo.roomName}}({{roomInfo.roomId}})</div>
-                        <select class="form-select" aria-label="Default select example" id="round">
-                            <option selected>라운드</option>
+                        <select class="form-select" aria-label="Default select example" id="round" v-model="round">
+                            <option value="0">라운드</option>
                             <option value="1">1라운드</option>
                             <option value="2">2라운드</option>
                             <option value="3">3라운드</option>
                         </select>
-                        <select class="form-select" aria-label="Default select example" id="round">
-                            <option selected>제한시간</option>
-                            <option value="1">30초</option>
-                            <option value="2">45초</option>
-                            <option value="3">90초</option>
-                        </select>
+                        <select class="form-select" aria-label="Default select example" id="time" v-model="limitTime">
+                            <option value="0">제한시간</option>
+                            <option value="2">2초</option>
+                            <option value="5">5초</option>
+                            <option value="10">10초</option>
+                        </select>   
                         <div class="room-button">
                             <button type="button" class="btn btn-secondary" @click="gameStart" v-if="roomInfo.host === socket.id">시작하기</button>
                             <button type="button" class="btn btn-secondary" @click="ready" v-else>준비하기</button>
@@ -59,11 +59,11 @@
 
             <div class="play-room" v-if="game" key="play-room">
                 <div class="title info" style="border-radius : 10px 10px 0px 0px">
-                    <h6>방이름(0)</h6>
+                    <h6>{{roomInfo.roomName}}({{roomInfo.roomId}})</h6>
                     <h6>끝말잇기</h6>
-                    <h6>참여자2/8</h6>
-                    <h6>1라운드</h6>
-                    <h6>45초</h6>
+                    <h6>참여자{{roomInfo.inUser}}/{{roomInfo.max}}</h6>
+                    <h6>{{round}}라운드</h6>
+                    <h6>{{limitTime}}초</h6>
                 </div>
 
                 <div class="guide">
@@ -72,57 +72,29 @@
                         <div class="word-time">
                             <div class="end-word">드</div>
                             <div class="time">
-                                <progress max="10" value="8"></progress>
-                                <div class="num">8</div>
+                                <progress :max="limitTime" :value="time"></progress>
+                                <div class="num">{{time}}</div>
                             </div>
                         </div>
+                        <input type="text" id="input-word" v-if="userList[page].id === socket.id" v-model="inputWord" @keydown.enter="input" class="form-control" placeholder="단어를 입력해주세요." aria-label="Username" aria-describedby="basic-addon1">
                     </div>
                 </div>
 
                 <div class="word-list">
-                    <div class="word">
-                        <div class="text">드라이버</div>
-                        <div class="meaning">나사를 조이는 도구</div>
-                    </div>
-                    <div class="word">
-                        <div class="text">버드</div>
-                        <div class="meaning">새</div>
+                    <div class="word" v-for="word in wordList" :key="word">
+                        <div class="text">{{word.name}}</div>
+                        <div class="meaning">{{word.content}}</div>
                     </div>
                 </div>
 
                 <div class="user-list">
                     <div class="content">
-                        <div class="user">
+                        <div class="user" v-for="user in userList" :key="user" :class="{now:userList[page].id === user.id}">
                             <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
-                        </div>
-                        <div class="user my now">
-                            <i class="fas fa-user"></i>
-                            <div class="name">임상언</div>
+                            <div class="user-info">
+                                <div class="name">{{user.nickName}}</div>
+                                <div class="score">{{user.score}}</div>    
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,7 +114,7 @@
                     </div>
                 </div>
             </div>
-        </transition>
+       </transition>
     </div>
 </template>
 
@@ -155,8 +127,9 @@ export default {
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
-        this.socket.on('endwordGameStart', ()=>{this.game = !this.gamel;});
-        if (document.readyState == 'loading') {location.href = '/#/';}
+        this.socket.on('endwordGameStart', data=>{this.game = !this.gamel; this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
+        this.socket.on('resultWord', data=>{if(data[0].name.length <= 1 || data[0].content === null) return; this.wordList.push(data[0]);});
+        if(document.readyState == 'loading') location.href = '/#/';
     },
     data(){
         return{
@@ -166,7 +139,13 @@ export default {
             msgInput:'',
             chatList:[],
             game:false,
-            wordList:[]
+            wordList:[],
+            page:0,
+            round:0,
+            limitTime:0, //사용자가 정한 제한시간
+            time:0, //실제 화면에서 보여지는 제한시간
+            inputWord:'',
+            endWord:''
         }
     },
     methods:{
@@ -212,12 +191,32 @@ export default {
                 alert('준비를 안한 유저가 있습니다!');
                 return;
             }
-            this.chatList = [];
-            this.socket.emit('endwordGameStart');
+            if(this.round === 0 || this.limitTime === 0){
+                alert('라운드 또는 제한시간을 선택해주세요.');
+                return;
+            }
+            let gameInfo = {round:this.round, limitTime:this.limitTime};
+            this.socket.emit('endwordGameStart', gameInfo);
         },
         stopGame(){
             this.chatList = [];
             this.game = false;
+        },
+        cycle(){
+            this.time = this.limitTime;
+            let pageCycle = setInterval(()=>{
+                if(this.time === 0){
+                    this.time = this.limitTime;
+                    this.time++;
+                    this.page++;
+                    if(this.page === this.userList.length) this.page = 0;
+                }
+                this.time--;
+            }, 1000);
+        },
+        input(){
+            this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
+            this.inputWord = '';
         }
     }
 }
@@ -368,6 +367,12 @@ export default {
         margin-left: 1%;
     }
 
+    .play-room > .guide > .content > #input-word{
+        position: fixed;
+        width: 35%;
+        margin-top: 0.5%;
+    }
+
     .play-room > .word-list{
         display: flex;
         align-items: center;
@@ -407,14 +412,19 @@ export default {
         width: 100%;
         height: 80%;
         display: grid;
-        grid-template-rows: 2fr 1fr;
+        grid-template-columns: 1fr 1fr;
         align-items: center;
         text-align: center;
     }
 
-    .play-room > .user-list > .content > .user.my.now{
+    .play-room > .user-list > .content > .user.now{
         box-shadow: 3px 3px 1px grey;
-        background-color: #9ad492;
+        background-color: #e2bc3d;
+    }
+    
+    .play-room > .user-list > .content > .user > .user-info{
+        display: grid;
+        grid-template-rows: 1fr 1fr;
     }
 
     .play-room > .user-list > .content > .user > i{
