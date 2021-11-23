@@ -151,6 +151,12 @@ io.on("connect", socket =>{
         resultWord(data.word, data.roomId);
     });
 
+    function resultWord(word, roomId){ //단어를 검색하는 함수
+        getWord(word).then((v) => {
+            io.to(roomId).emit('resultWord', v.result);
+        });
+    }
+//---------------------------------------------------------------------------------------------[]
     socket.on('roomOut', () => {
         roomOut(socket.id);
     });
@@ -270,12 +276,6 @@ io.on("connect", socket =>{
             systemMsg(roomOutUser.nickName + '님이 추방당하셨습니다.', roomOutUser.roomId);
             io.to(id).emit('enwordKickResult');
         }
-    }
-
-    function resultWord(word, roomId){ //단어를 검색하는 함수
-        getWord(word).then((v) => {
-            io.to(roomId).emit('resultWord', v.result);
-        });
     }
 });
 
