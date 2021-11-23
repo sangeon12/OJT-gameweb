@@ -160,7 +160,7 @@ io.on("connect", socket =>{
     });
 
     socket.on('leaveRoom', data=>{
-        socket.leave();
+        socket.leave(data);
         let roomInfo = roomList.find(x => x.roomId === data);
         if(roomInfo.host === socket.id){
             let socketRooms = io.of("/").adapter.rooms.get(data).values();
