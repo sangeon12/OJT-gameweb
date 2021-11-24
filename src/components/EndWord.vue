@@ -7,13 +7,13 @@
                     <div class="title" style="border-radius : 10px 0px 0px 0px">방메뉴</div>
                     <div class="room-menu">
                         <div class="room-info">{{roomInfo.roomName}}({{roomInfo.roomId}})</div>
-                        <select class="form-select" aria-label="Default select example" id="round" v-model="round">
+                        <select class="form-select" aria-label="Default select example" id="round" v-model="round" v-if="roomInfo.host === socket.id">
                             <option value="0">라운드</option>
                             <option value="1">1라운드</option>
                             <option value="2">2라운드</option>
                             <option value="3">3라운드</option>
                         </select>
-                        <select class="form-select" aria-label="Default select example" id="time" v-model="limitTime">
+                        <select class="form-select" aria-label="Default select example" id="time" v-model="limitTime" v-if="roomInfo.host === socket.id">
                             <option value="0">제한시간</option>
                             <option value="2">2초</option>
                             <option value="5">5초</option>
@@ -70,31 +70,33 @@
                     <div class="content">
                         <h6>드라이버</h6>
                         <div class="word-time">
-                            <div class="end-word">드</div>
+                            <div class="end-word">{{endWord}}</div>
                             <div class="time">
                                 <progress :max="limitTime" :value="time"></progress>
                                 <div class="num">{{time}}</div>
                             </div>
+                            <input type="text" id="input-word" v-if="userList[page].id === socket.id" v-model="inputWord" @keydown.enter="input" class="form-control" placeholder="단어를 입력해주세요." aria-label="Username" aria-describedby="basic-addon1">
                         </div>
-                        <input type="text" id="input-word" v-if="userList[page].id === socket.id" v-model="inputWord" @keydown.enter="input" class="form-control" placeholder="단어를 입력해주세요." aria-label="Username" aria-describedby="basic-addon1">
                     </div>
                 </div>
 
                 <div class="word-list">
-                    <div class="word" v-for="word in wordList" :key="word">
-                        <div class="text">{{word.name}}</div>
-                        <div class="meaning">{{word.content}}</div>
+                    <div class="words">
+                        <div class="word" v-for="word in wordList" :key="word">
+                            <div class="text">{{word.name}}</div>
+                            <div class="meaning">{{word.content}}</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="user-list">
                     <div class="content">
                         <div class="user" v-for="user in userList" :key="user" :class="{now:userList[page].id === user.id}">
-                            <i class="fas fa-user"></i>
                             <div class="user-info">
-                                <div class="name">{{user.nickName}}</div>
+                                <i class="fas fa-user"></i>
                                 <div class="score">{{user.score}}</div>    
                             </div>
+                            <div class="name">{{user.nickName}}</div>
                         </div>
                     </div>
                 </div>
@@ -128,7 +130,18 @@ export default {
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
         this.socket.on('endwordGameStart', data=>{this.game = !this.gamel; this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
-        this.socket.on('resultWord', data=>{if(data[0].name.length <= 1 || data[0].content === null) return; this.wordList.push(data[0]);});
+        this.socket.on('resultWord', data=>{
+            if(data[0].content === null){this.systemMsg('없는 단어입니다.'); return;}
+            if(this.wordList.length > 4) this.wordList.splice(0,1);
+            if(data[0].content.length > 12){
+                this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 12)+'...'})
+            }else{
+                this.wordList.push(data[0]); 
+            } 
+            this.endWord = data[0].name.substr(data[0].name.length - 1, 1);
+            this.inputWord = '';
+            this.time = 0;
+        });
         if(document.readyState == 'loading') location.href = '/#/';
     },
     data(){
@@ -145,7 +158,7 @@ export default {
             limitTime:0, //사용자가 정한 제한시간
             time:0, //실제 화면에서 보여지는 제한시간
             inputWord:'',
-            endWord:''
+            endWord:'드'
         }
     },
     methods:{
@@ -195,8 +208,7 @@ export default {
                 alert('라운드 또는 제한시간을 선택해주세요.');
                 return;
             }
-            let gameInfo = {round:this.round, limitTime:this.limitTime};
-            this.socket.emit('endwordGameStart', gameInfo);
+            this.socket.emit('endwordGameStart', {round:this.round, limitTime:this.limitTime});
         },
         stopGame(){
             this.chatList = [];
@@ -215,8 +227,16 @@ export default {
             }, 1000);
         },
         input(){
+            if(this.userList[this.page].id !== this.socket.id) return;
+            if(this.wordList.findIndex(x => x.name === this.inputWord) >= 0){this.systemMsg('중복되는 단어입니다.'); return;}
+            if(this.inputWord.length <= 1){this.systemMsg('2자리 이상의 단어만 사용 가능합니다.'); return;}
+            if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('('+this.endWord+')로 끝나는 단어만 사용가능합니다.'); return;}
+            if(this.time === 0){this.inputWord = ''; return;}
             this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
-            this.inputWord = '';
+        },
+        systemMsg(msg){
+            this.chatList.push({id:'SYSTEM', nickName:'SYSTEM', msg:msg}); 
+            this.scroll(); 
         }
     }
 }
@@ -367,23 +387,33 @@ export default {
         margin-left: 1%;
     }
 
-    .play-room > .guide > .content > #input-word{
+    .play-room > .guide > .content > .word-time > #input-word{
         position: fixed;
-        width: 35%;
         margin-top: 0.5%;
+        width: 35%;
     }
 
     .play-room > .word-list{
+        width: 100%;
+        height: 100%;
         display: flex;
+        justify-content: center;
         align-items: center;
     }
 
-    .play-room > .word-list > .word{
+    .play-room > .word-list > .words{
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+        gap: 5px;
+        width: 98%;
+        height: 80%;
+    }
+
+    .play-room > .word-list > .words > .word{
         background-color: #e0e0e0;
         border-radius: 5px;
-        margin-left: 10px;
-        width: 20%;
-        height: 80%;
+        width: 100%;
+        height: 100%;
         display: grid;
         grid-template-rows: 1fr 1fr;
         text-align: center;
@@ -412,7 +442,7 @@ export default {
         width: 100%;
         height: 80%;
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
         align-items: center;
         text-align: center;
     }
@@ -424,10 +454,10 @@ export default {
     
     .play-room > .user-list > .content > .user > .user-info{
         display: grid;
-        grid-template-rows: 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
-    .play-room > .user-list > .content > .user > i{
+    .play-room > .user-list > .content > .user > .user-info > i{
         font-size: 25px;
     }
 

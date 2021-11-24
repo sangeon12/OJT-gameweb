@@ -48,7 +48,7 @@
       </div>
 
       <div class="right">
-        <div class="title point" style="border-radius: 0px 10px 0px 0px;" @click="userListView">유저</div>
+        <div class="title point" style="border-radius: 0px 10px 0px 0px;" @click="userListView"><b>유저</b></div>
 
         <div class="content">
           <div class="userList" style="border-radius: 0px 0px 10px 0px;">
@@ -294,6 +294,9 @@ export default {
   .rooms{
     width: 98%;
     height: 98%; 
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   }
 
   .room{

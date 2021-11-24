@@ -23,7 +23,6 @@ app.use(bodyParser.json());
 
 const {getWord} = require('./searchWord.js');
 
-
 let userList = []; //현재 접속한 유저 리스트
 let adminPassword = 'admin'; //관리자 패스워드
 let adminOn = false; //관리자 접속 여부
