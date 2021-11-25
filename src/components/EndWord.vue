@@ -133,9 +133,9 @@ export default {
         this.socket.on('resultWord', data=>{
             if(data[0].content === null){this.systemMsg('없는 단어입니다.'); return;}
             if(this.wordList.length > 4) this.wordList.splice(0,1);
-            if(data[0].name.length <= 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 12)+'...'});
+            if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
             else if(data[0].name.length > 10 && data[0].content.length <= 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content});
-            else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 12)+'...'});
+            else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
             else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
             this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, le:data[0].name.length, time:this.time});
             this.endWord = data[0].name.substr(data[0].name.length - 1, 1);
@@ -231,8 +231,8 @@ export default {
             if(this.userList[this.page].id !== this.socket.id) return;
             if(this.wordList.findIndex(x => x.name === this.inputWord) >= 0){this.systemMsg('중복되는 단어입니다.'); return;}
             if(this.inputWord.length <= 1){this.systemMsg('2자리 이상의 단어만 사용 가능합니다.'); return;}
-            if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('('+this.endWord+')로 끝나는 단어만 사용가능합니다.'); return;}
-            if(this.time === 0){this.inputWord = ''; return;}
+            if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('('+this.endWord+')로 시작하는 단어만 사용가능합니다.'); return;}
+            if(this.time === 0) return;
             this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
         },
         systemMsg(msg){
@@ -387,6 +387,12 @@ export default {
 
     .play-room > .guide > .content > .word-time > .time > .num{
         margin-left: 1%;
+    }
+
+    #input-word{
+        position: fixed;
+        margin-top: 0.5%;
+        width: 35%;
     }
 
     .play-room > .word-list{
