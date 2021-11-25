@@ -388,6 +388,12 @@ export default {
     .play-room > .guide > .content > .word-time > .time > .num{
         margin-left: 1%;
     }
+    
+    #input-word{
+        position: fixed;
+        margin-top: 0.5%;
+        width: 35%;
+    }
 
     #input-word{
         position: fixed;
