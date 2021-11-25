@@ -8,7 +8,8 @@
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "start": "npm run dev",
     "build": "node build/build.js",
-    "serve": "node build/build.js & cd back_server & node server.js"
+    "serve": "node build/build.js & cd back_server & node server.js",
+    "server": "cd back_server & node server.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",

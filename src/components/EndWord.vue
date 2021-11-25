@@ -129,21 +129,21 @@ export default {
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
-        this.socket.on('endwordGameStart', data=>{this.game = !this.gamel; this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
+        this.socket.on('endwordGameStart', data=>{this.game = !this.game; this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
         this.socket.on('resultWord', data=>{
             if(data[0].content === null){this.systemMsg('없는 단어입니다.'); return;}
             if(this.wordList.length > 4) this.wordList.splice(0,1);
-            if(data[0].content.length > 12){
-                this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 12)+'...'})
-            }else{
-                this.wordList.push(data[0]); 
-            } 
+            if(data[0].name.length <= 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 12)+'...'});
+            else if(data[0].name.length > 10 && data[0].content.length <= 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content});
+            else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 12)+'...'});
+            else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
+            this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, le:data[0].name.length, time:this.time});
             this.endWord = data[0].name.substr(data[0].name.length - 1, 1);
             this.inputWord = '';
             this.time = 0;
         });
         if(document.readyState == 'loading') location.href = '/#/';
-    },
+    },  
     data(){
         return{
             socket:this.$socket,
@@ -224,6 +224,7 @@ export default {
                     if(this.page === this.userList.length) this.page = 0;
                 }
                 this.time--;
+                this.socket.emit('cycle', {time:this.time, roomId:this.roomInfo.roomId});
             }, 1000);
         },
         input(){
@@ -242,7 +243,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped>  
     #endword{
         margin: 0 auto;
         width: 70%;
@@ -364,6 +365,7 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
+        z-index: 10;
     }
 
     .play-room > .guide > .content{
@@ -385,12 +387,6 @@ export default {
 
     .play-room > .guide > .content > .word-time > .time > .num{
         margin-left: 1%;
-    }
-
-    .play-room > .guide > .content > .word-time > #input-word{
-        position: fixed;
-        margin-top: 0.5%;
-        width: 35%;
     }
 
     .play-room > .word-list{

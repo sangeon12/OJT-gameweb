@@ -102,7 +102,6 @@ export default {
       createRoomSelectGame:'',
       searchRoomView:false,
       searchRoomId:''
-      
     }
   },
   methods:{
@@ -309,6 +308,12 @@ export default {
     grid-template-rows: 1fr 1fr 1fr;
     text-align: center;
     cursor: pointer;
+  }
+
+  .roomName{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
   }
 
   .right{

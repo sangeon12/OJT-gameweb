@@ -146,15 +146,26 @@ io.on("connect", socket =>{
         io.emit('endwordGameStart', data);
     });
 
-    socket.on('searchWord', data =>{
-        resultWord(data.word, data.roomId);
+    socket.on('cycle', data => {
+
     });
 
-    function resultWord(word, roomId){ //단어를 검색하는 함수
-        getWord(word).then((v) => {
-            io.to(roomId).emit('resultWord', v.result);
+    socket.on('endwordScore', data => {
+        let score = (data.le * 2) + data.time;
+        let scoreUser = endWordInUser.find(x => x.id === socket.id);
+        scoreUser.score += score;
+        let roomUserList = [];
+        endWordInUser.forEach((e) =>{
+            if(e.roomId === data.roomId) roomUserList.push(e);
         });
-    }
+        io.to(data.roomId).emit('endwordList', roomUserList);
+    });
+
+    socket.on('searchWord', data =>{
+        getWord(data.word).then((v) => {
+            io.to(data.roomId).emit('resultWord', v.result);
+        });
+    });
 //---------------------------------------------------------------------------------------------[]
     socket.on('roomOut', () => {
         roomOut(socket.id);
