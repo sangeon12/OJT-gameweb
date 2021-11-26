@@ -36,6 +36,7 @@
         </div>
         <div class="roomList">
           <div class="rooms">
+            
             <div class="room" v-for="room in roomList" :key="room" @click="enterRoom(room.roomId)">
               <div class="roomName">{{room.roomName}}({{room.roomId}}) 
                 <i class="fas fa-lock" v-if="room.roomPassword !== ''"></i><i class="fas fa-lock-open" v-else></i>
@@ -43,6 +44,7 @@
               <div class="selectGame">{{room.selectGame}}</div>
               <div class="inUser">{{room.inUser}}/{{room.max}}</div>
             </div>
+
           </div>
         </div>
       </div>
@@ -202,8 +204,8 @@ export default {
 
   .createRoom{
     position: absolute;
-    width: 30%;
-    height: 62%;
+    width: 270px;
+    height: 285px;
     z-index: 10;
     background-color: white;
     text-align: center;
@@ -225,8 +227,8 @@ export default {
 
   .searchRoom{
     position: absolute;
-    width: 30%;
-    height: 38%;
+    width: 270px;
+    height: 170px;
     z-index: 10;
     background-color: white;
     text-align: center;
@@ -332,7 +334,7 @@ export default {
     text-align: center;
     border-bottom-right-radius: 5px;
     background-color: #bdbdbd;
-    margin-bottom: 5px; 
+    margin-bottom: 4px; 
     box-shadow: 0px 3px 5px gray;
     z-index: 10;
     width: 100%;

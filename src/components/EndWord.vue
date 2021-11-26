@@ -131,17 +131,18 @@ export default {
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
         this.socket.on('endwordGameStart', data=>{this.game = !this.game; this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
         this.socket.on('resultWord', data=>{
-            if(data[0].content === null){this.systemMsg('없는 단어입니다.'); return;}
             if(this.wordList.length > 4) this.wordList.splice(0,1);
             if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
             else if(data[0].name.length > 10 && data[0].content.length <= 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content});
             else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
             else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
-            this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, le:data[0].name.length, time:this.time});
-            this.endWord = data[0].name.substr(data[0].name.length - 1, 1);
+            this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
+            this.endWord = data[0].name.substr(data[0].name.length - 1);
             this.inputWord = '';
             this.time = 0;
         });
+        this.socket.on('wrongWord', () => {this.systemMsg('없는 단어입니다.'); return;});
+        this.socket.on('endwordCycle', () => {this.cycle(); console.log('멍령')});
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -170,8 +171,8 @@ export default {
         scroll() {
             const msgBox = document.querySelector(".chating");
                 let scrollInterval = setInterval(() => {  
-                msgBox.scrollTop = msgBox.scrollHeight;
-                clearInterval(scrollInterval);
+                    msgBox.scrollTop = msgBox.scrollHeight;
+                    clearInterval(scrollInterval);
             }, 10);
         },
         outRoom(){
@@ -215,17 +216,22 @@ export default {
             this.game = false;
         },
         cycle(){
+            console.log('인터벌');
             this.time = this.limitTime;
-            let pageCycle = setInterval(()=>{
-                if(this.time === 0){
-                    this.time = this.limitTime;
-                    this.time++;
-                    this.page++;
-                    if(this.page === this.userList.length) this.page = 0;
-                }
-                this.time--;
-                this.socket.emit('cycle', {time:this.time, roomId:this.roomInfo.roomId});
-            }, 1000);
+            let inter = new Promise( (resolve, reject) => {
+                let pageCycle = setInterval(()=>{
+                    this.time--;
+                    if(this.time === 0){
+                        this.page++;
+                        if(this.page === this.userList.length) this.page = 0;
+                        clearInterval(pageCycle);
+                        resolve();
+                    }
+                }, 1000);
+            });
+            inter.then(()=>{
+                this.socket.emit('endwordCycle', this.roomInfo.roomId);
+            });
         },
         input(){
             if(this.userList[this.page].id !== this.socket.id) return;

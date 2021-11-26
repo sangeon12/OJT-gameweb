@@ -146,11 +146,12 @@ io.on("connect", socket =>{
         io.emit('endwordGameStart', data);
     });
 
-    socket.on('cycle', data => {
-
+    socket.on('endwordCycle', data => {
+        io.to(data).emit('endwordCycle');
     });
 
     socket.on('endwordScore', data => {
+        if(data.id !== socket.id) return;
         let score = (data.le * 2) + data.time;
         let scoreUser = endWordInUser.find(x => x.id === socket.id);
         scoreUser.score += score;
@@ -163,7 +164,14 @@ io.on("connect", socket =>{
 
     socket.on('searchWord', data =>{
         getWord(data.word).then((v) => {
-            io.to(data.roomId).emit('resultWord', v.result);
+            switch(v.result[0].content){
+                case null:
+                    socket.emit('wrongWord');
+                    break
+                default:
+                    io.to(data.roomId).emit('resultWord', v.result);
+                    break
+            }
         });
     });
 //---------------------------------------------------------------------------------------------[]
