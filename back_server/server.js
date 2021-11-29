@@ -147,7 +147,7 @@ io.on("connect", socket =>{
     });
 
     socket.on('endwordCycle', data => {
-        io.to(data).emit('endwordCycle');
+        io.to(data.roomId).emit('endwordCycle', data.time);
     });
 
     socket.on('endwordScore', data => {

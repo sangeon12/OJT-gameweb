@@ -73,7 +73,8 @@
                             <div class="end-word">{{endWord}}</div>
                             <div class="time">
                                 <progress :max="limitTime" :value="time"></progress>
-                                <div class="num">{{time}}</div>
+                                <div class="num" v-if="time >= 0">{{time}}</div>
+                                <div class="num" v-else>0</div>
                             </div>
                             <input type="text" id="input-word" v-if="userList[page].id === socket.id" v-model="inputWord" @keydown.enter="input" class="form-control" placeholder="단어를 입력해주세요." aria-label="Username" aria-describedby="basic-addon1">
                         </div>
@@ -137,12 +138,20 @@ export default {
             else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
             else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
             this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
-            this.endWord = data[0].name.substr(data[0].name.length - 1);
             this.inputWord = '';
+            this.endWord = data[0].name.substr(data[0].name.length - 1);
             this.time = 0;
         });
         this.socket.on('wrongWord', () => {this.systemMsg('없는 단어입니다.'); return;});
-        this.socket.on('endwordCycle', () => {this.cycle(); console.log('멍령')});
+        this.socket.on('endwordCycle', data => {
+            this.time = data;
+            if(this.time < 0){
+                this.page++; 
+                if(this.page === this.userList.length) this.page = 0; 
+                clearInterval(this.pageCycle); 
+                this.cycle()
+            }
+        });
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -159,7 +168,8 @@ export default {
             limitTime:0, //사용자가 정한 제한시간
             time:0, //실제 화면에서 보여지는 제한시간
             inputWord:'',
-            endWord:'드'
+            endWord:'드',
+            pageCycle:null
         }
     },
     methods:{
@@ -216,22 +226,13 @@ export default {
             this.game = false;
         },
         cycle(){
-            console.log('인터벌');
             this.time = this.limitTime;
-            let inter = new Promise( (resolve, reject) => {
-                let pageCycle = setInterval(()=>{
-                    this.time--;
-                    if(this.time === 0){
-                        this.page++;
-                        if(this.page === this.userList.length) this.page = 0;
-                        clearInterval(pageCycle);
-                        resolve();
-                    }
-                }, 1000);
-            });
-            inter.then(()=>{
-                this.socket.emit('endwordCycle', this.roomInfo.roomId);
-            });
+            let time = this.limitTime;
+            if(this.roomInfo.host !== this.socket.id) return;
+            this.pageCycle = setInterval(()=>{
+                time--;
+                this.socket.emit('endwordCycle', {time:time, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
+            }, 1000);
         },
         input(){
             if(this.userList[this.page].id !== this.socket.id) return;
