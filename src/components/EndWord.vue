@@ -140,18 +140,11 @@ export default {
             this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
             this.inputWord = '';
             this.endWord = data[0].name.substr(data[0].name.length - 1);
-            this.time = 0;
+            this.time = -1;
+            if(this.time < 0) this.cycle();
         });
         this.socket.on('wrongWord', () => {this.systemMsg('없는 단어입니다.'); return;});
-        this.socket.on('endwordCycle', data => {
-            this.time = data;
-            if(this.time < 0){
-                this.page++; 
-                if(this.page === this.userList.length) this.page = 0; 
-                clearInterval(this.pageCycle); 
-                this.cycle()
-            }
-        });
+        this.socket.on('endwordCycle', data => {this.time = data; if(this.time < 0) this.cycle();});
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -226,8 +219,11 @@ export default {
             this.game = false;
         },
         cycle(){
+            if(this.time < 0) this.page++; 
             this.time = this.limitTime;
             let time = this.limitTime;
+            if(this.page === this.userList.length) this.page = 0; 
+            clearInterval(this.pageCycle); 
             if(this.roomInfo.host !== this.socket.id) return;
             this.pageCycle = setInterval(()=>{
                 time--;
