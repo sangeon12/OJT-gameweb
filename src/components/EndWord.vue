@@ -2,7 +2,7 @@
     <div id="endword">
 
         <transition name="tr" mode="out-in">
-            <div class="wait-room" v-if="!game" key="wait-room">
+            <div class="wait-room" v-if="!roomInfo.game" key="wait-room">
                 <div class="left">
                     <div class="title" style="border-radius : 10px 0px 0px 0px">방메뉴</div>
                     <div class="room-menu">
@@ -15,9 +15,9 @@
                         </select>
                         <select class="form-select" aria-label="Default select example" id="time" v-model="limitTime" v-if="roomInfo.host === socket.id">
                             <option value="0">제한시간</option>
-                            <option value="2">2초</option>
                             <option value="5">5초</option>
                             <option value="10">10초</option>
+                            <option value="15">15초</option>
                         </select>   
                         <div class="room-button">
                             <button type="button" class="btn btn-secondary" @click="gameStart" v-if="roomInfo.host === socket.id">시작하기</button>
@@ -57,7 +57,7 @@
 
 
 
-            <div class="play-room" v-if="game" key="play-room">
+            <div class="play-room" v-if="roomInfo.game" key="play-room">
                 <div class="title info" style="border-radius : 10px 10px 0px 0px">
                     <h6>{{roomInfo.roomName}}({{roomInfo.roomId}})</h6>
                     <h6>끝말잇기</h6>
@@ -130,7 +130,7 @@ export default {
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
-        this.socket.on('endwordGameStart', data=>{this.game = !this.game; this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
+        this.socket.on('endwordGameStart', data=>{this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
         this.socket.on('resultWord', data=>{
             if(this.wordList.length > 4) this.wordList.splice(0,1);
             if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
@@ -138,13 +138,29 @@ export default {
             else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
             else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
             this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
-            this.inputWord = '';
             this.endWord = data[0].name.substr(data[0].name.length - 1);
             this.time = -1;
             if(this.time < 0) this.cycle();
+            this.inputWord = '';
         });
-        this.socket.on('wrongWord', () => {this.systemMsg('없는 단어입니다.'); return;});
+        this.socket.on('wrongWord', () => { this.systemMsg('없는 단어입니다.'); return;});
         this.socket.on('endwordCycle', data => {this.time = data; if(this.time < 0) this.cycle();});
+        document.addEventListener("visibilitychange", () => {
+            clearInterval(this.pageCycle);
+            if(document.hidden){
+                this.setTime = 100;
+                this.pageCycle = setInterval(()=>{
+                    this.emitTime--;
+                    this.socket.emit('endwordCycle', {time:this.emitTime, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
+                }, 100);
+            }else{
+                this.setTime = 1000;
+                this.pageCycle = setInterval(()=>{
+                    this.emitTime--;
+                    this.socket.emit('endwordCycle', {time:this.emitTime, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
+                }, 1000);
+            }
+        });
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -154,15 +170,17 @@ export default {
             userList:[],
             msgInput:'',
             chatList:[],
-            game:false,
             wordList:[],
             page:0,
             round:0,
             limitTime:0, //사용자가 정한 제한시간
             time:0, //실제 화면에서 보여지는 제한시간
+            emitTime:0, //서버에 보낸 시간
             inputWord:'',
             endWord:'드',
-            pageCycle:null
+            pageCycle:null,
+            turn:true,
+            setTime:1000
         }
     },
     methods:{
@@ -212,31 +230,34 @@ export default {
                 alert('라운드 또는 제한시간을 선택해주세요.');
                 return;
             }
-            this.socket.emit('endwordGameStart', {round:this.round, limitTime:this.limitTime});
+            this.socket.emit('endwordGameStart', {roomId:this.roomInfo.roomId ,round:this.round, limitTime:this.limitTime});
         },
         stopGame(){
             this.chatList = [];
             this.game = false;
         },
         cycle(){
+            this.turn = true;
             if(this.time < 0) this.page++; 
             this.time = this.limitTime;
-            let time = this.limitTime;
+            this.emitTime = this.limitTime;
             if(this.page === this.userList.length) this.page = 0; 
-            clearInterval(this.pageCycle); 
             if(this.roomInfo.host !== this.socket.id) return;
+            clearInterval(this.pageCycle); 
             this.pageCycle = setInterval(()=>{
-                time--;
-                this.socket.emit('endwordCycle', {time:time, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
-            }, 1000);
+                this.emitTime--;
+                this.socket.emit('endwordCycle', {time:this.emitTime, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
+            }, this.setTime);
         },
         input(){
+            if(!this.turn) return;
             if(this.userList[this.page].id !== this.socket.id) return;
             if(this.wordList.findIndex(x => x.name === this.inputWord) >= 0){this.systemMsg('중복되는 단어입니다.'); return;}
             if(this.inputWord.length <= 1){this.systemMsg('2자리 이상의 단어만 사용 가능합니다.'); return;}
             if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('('+this.endWord+')로 시작하는 단어만 사용가능합니다.'); return;}
             if(this.time === 0) return;
             this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
+            this.turn = false;
         },
         systemMsg(msg){
             this.chatList.push({id:'SYSTEM', nickName:'SYSTEM', msg:msg}); 

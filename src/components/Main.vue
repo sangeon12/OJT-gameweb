@@ -158,6 +158,10 @@ export default {
     },
     enterRoom(roomId){
       let roomInfo = this.roomList.find(x => x.roomId === roomId);
+      if(roomInfo.game){
+        alert('이미 게임이 진행중입니다.');
+        return;
+      }
       if(roomInfo.inUser === roomInfo.max){
           alert('방에 빈자리가 없습니다.');
           return;

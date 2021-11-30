@@ -143,7 +143,11 @@ io.on("connect", socket =>{
     });
 
     socket.on('endwordGameStart', data=>{
-        io.emit('endwordGameStart', data);
+        let roomInfo = roomList.find(x => x.roomId === data.roomId);
+        roomInfo.game = true;
+        io.to(data.roomId).emit('roomInfo', roomInfo);
+        io.emit('roomList', roomList);
+        io.to(data.roomId).emit('endwordGameStart', data);
     });
 
     socket.on('endwordCycle', data => {
@@ -195,7 +199,7 @@ io.on("connect", socket =>{
     });
 //----------------------------------------------------------------------------------------------------------------
     function createRoom(roomInfo, user){
-        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0});
+        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0, game:false});
         io.emit('roomList', roomList);
         socket.join(roomId);
         roomListUpdata(roomId, true);
