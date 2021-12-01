@@ -151,8 +151,11 @@ io.on("connect", socket =>{
     });
 
     socket.on('endwordCycle', data => {
-        io.to(data.roomId).emit('endwordCycle', data.time);
-    });
+        setInterval(()=>{
+            
+            io.to(data).emit('endwordCycle');
+        }, 1000);
+    }); 
 
     socket.on('endwordScore', data => {
         if(data.id !== socket.id) return;
@@ -199,7 +202,7 @@ io.on("connect", socket =>{
     });
 //----------------------------------------------------------------------------------------------------------------
     function createRoom(roomInfo, user){
-        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0, game:false});
+        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0, game:false, inter:null});
         io.emit('roomList', roomList);
         socket.join(roomId);
         roomListUpdata(roomId, true);
@@ -230,6 +233,7 @@ io.on("connect", socket =>{
     function roomListUpdata(getRoomId, inOut){ //방정보를 업데이트하고 방정보를 client에 보내는 함수
         let roomUserList = []; //가져온 방id에 들어가있는 유저를 저장하는 리스트
         let roomInfo = roomList.find(x => x.roomId === getRoomId);
+        if(roomInfo === null) return;
         switch(roomInfo.selectGame){
             case 'chating':
                 chatingInUser.forEach((e)=>{
@@ -245,7 +249,7 @@ io.on("connect", socket =>{
         if(inOut) roomInfo.inUser++;
         else{
             roomInfo.inUser--;
-            if(roomInfo.inUser === 0) roomList.splice(x => x.roomId === getRoomId);
+            if(roomInfo.inUser === 0) roomList.splice(roomList.findIndex(x => x.roomId === getRoomId), 1);
             else if(roomInfo.host === socket.id){
                 let socketRooms = io.of("/").adapter.rooms.get(getRoomId).values();
                 roomInfo.host = socketRooms.next().value;

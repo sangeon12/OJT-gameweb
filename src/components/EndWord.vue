@@ -68,7 +68,7 @@
 
                 <div class="guide">
                     <div class="content">
-                        <h6>드라이버</h6>
+                        <h6>{{startWord}}</h6>
                         <div class="word-time">
                             <div class="end-word">{{endWord}}</div>
                             <div class="time">
@@ -130,7 +130,15 @@ export default {
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
-        this.socket.on('endwordGameStart', data=>{this.chatList = []; this.round = data.round; this.limitTime = data.limitTime; this.cycle();});
+        this.socket.on('endwordGameStart', data=>{
+            this.chatList = []; 
+            this.round = data.round; 
+            let startWord = '가나다';  
+            this.startWord = startWord.substr(0, this.round);;
+            this.limitTime = data.limitTime; 
+            if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
+            this.cycle();
+        });
         this.socket.on('resultWord', data=>{
             if(this.wordList.length > 4) this.wordList.splice(0,1);
             if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
@@ -139,28 +147,11 @@ export default {
             else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
             this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
             this.endWord = data[0].name.substr(data[0].name.length - 1);
-            this.time = -1;
-            if(this.time < 0) this.cycle();
+            this.cycle();
             this.inputWord = '';
         });
-        this.socket.on('wrongWord', () => { this.systemMsg('없는 단어입니다.'); return;});
-        this.socket.on('endwordCycle', data => {this.time = data; if(this.time < 0) this.cycle();});
-        document.addEventListener("visibilitychange", () => {
-            clearInterval(this.pageCycle);
-            if(document.hidden){
-                this.setTime = 100;
-                this.pageCycle = setInterval(()=>{
-                    this.emitTime--;
-                    this.socket.emit('endwordCycle', {time:this.emitTime, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
-                }, 100);
-            }else{
-                this.setTime = 1000;
-                this.pageCycle = setInterval(()=>{
-                    this.emitTime--;
-                    this.socket.emit('endwordCycle', {time:this.emitTime, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
-                }, 1000);
-            }
-        });
+        this.socket.on('wrongWord', () => {this.myTurn--; this.systemMsg('없는 단어입니다.'); return;});
+        this.socket.on('endwordCycle', () => {this.time--; if(this.time < 0) this.cycle();});
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -175,11 +166,12 @@ export default {
             round:0,
             limitTime:0, //사용자가 정한 제한시간
             time:0, //실제 화면에서 보여지는 제한시간
-            emitTime:0, //서버에 보낸 시간
             inputWord:'',
+            startWord:'',
             endWord:'드',
             pageCycle:null,
-            turn:true,
+            turn:0,
+            myTurn:0,
             setTime:1000
         }
     },
@@ -237,27 +229,22 @@ export default {
             this.game = false;
         },
         cycle(){
-            this.turn = true;
-            if(this.time < 0) this.page++; 
             this.time = this.limitTime;
-            this.emitTime = this.limitTime;
+            if(this.time < 0) this.page++;
             if(this.page === this.userList.length) this.page = 0; 
-            if(this.roomInfo.host !== this.socket.id) return;
-            clearInterval(this.pageCycle); 
-            this.pageCycle = setInterval(()=>{
-                this.emitTime--;
-                this.socket.emit('endwordCycle', {time:this.emitTime, roomId:this.roomInfo.roomId, host:this.roomInfo.host});
-            }, this.setTime);
+            this.turn++; 
+            if(this.userList[this.page].id !== this.socket.id) this.myTurn++;
         },
         input(){
-            if(!this.turn) return;
+            if(this.turn === this.myTurn) return;
             if(this.userList[this.page].id !== this.socket.id) return;
+            if(this.inputWord === "") return;
             if(this.wordList.findIndex(x => x.name === this.inputWord) >= 0){this.systemMsg('중복되는 단어입니다.'); return;}
             if(this.inputWord.length <= 1){this.systemMsg('2자리 이상의 단어만 사용 가능합니다.'); return;}
             if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('('+this.endWord+')로 시작하는 단어만 사용가능합니다.'); return;}
             if(this.time === 0) return;
             this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
-            this.turn = false;
+            this.myTurn++;
         },
         systemMsg(msg){
             this.chatList.push({id:'SYSTEM', nickName:'SYSTEM', msg:msg}); 
