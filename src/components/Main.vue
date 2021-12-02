@@ -120,7 +120,6 @@ export default {
       this.msgInput = '';
     },
     scroll() {
-      if(location.href !== 'http://localhost:7514/#/main') return;
       const msgBox = document.querySelector(".chating");
         let scrollInterval = setInterval(() => {  
         msgBox.scrollTop = msgBox.scrollHeight;
@@ -148,8 +147,12 @@ export default {
     createRoom(){
       const selectGame = document.querySelector("#selectGame").value;
       if(this.createRoomName === "" || selectGame === "" || selectGame === "방종류"){
-        alert("방 이름 또는 게임을 선택해주세요.");
+        alert("방 이름 또는 게임이 비어있습니다.");
         return;   
+      }
+      if(this.createRoomName.length > 5){
+        alert("방 이름이 너무 깁니다!! 5글자 이하로 작성해주세요.");
+        return;
       }
       this.socket.emit(selectGame, {roomName:this.createRoomName, roomPassword:this.createRoomPassword, selectGame:selectGame});
       this.createRoomName = '';
@@ -297,6 +300,7 @@ export default {
   }
 
   .rooms{
+    margin-top: 5px;
     width: 98%;
     height: 98%; 
     display: grid;
@@ -306,7 +310,7 @@ export default {
 
   .room{
     float: left;
-    margin-top: 5px;
+    margin-bottom: 5px;
     margin-left: 5px;
     background-color: #bdbdbd;
     border-radius: 5px;

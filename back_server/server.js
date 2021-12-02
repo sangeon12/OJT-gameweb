@@ -150,12 +150,26 @@ io.on("connect", socket =>{
         io.to(data.roomId).emit('endwordGameStart', data);
     });
 
+    let interList = [];
     socket.on('endwordCycle', data => {
-        setInterval(()=>{
-            
+        interList[data] = setInterval(()=>{
             io.to(data).emit('endwordCycle');
         }, 1000);
     }); 
+
+    socket.on('endwordCycleStop', data => {
+        clearInterval(interList[data.roomId]);
+        systemMsg(data.nickName + '님 실패!! 게임이 종료됩니다!!', data.roomId);
+        let score = 15;
+        let scoreUser = endWordInUser.find(x => x.id === socket.id);
+        scoreUser.score -= score;
+        let roomUserList = [];
+        endWordInUser.forEach((e) =>{
+            if(e.roomId === data.roomId) roomUserList.push(e);
+        });
+        io.to(data.roomId).emit('endwordList', roomUserList);
+        io.to(data.roomId).emit('endwordTimeover', roomUserList);
+    });
 
     socket.on('endwordScore', data => {
         if(data.id !== socket.id) return;
@@ -202,7 +216,7 @@ io.on("connect", socket =>{
     });
 //----------------------------------------------------------------------------------------------------------------
     function createRoom(roomInfo, user){
-        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0, game:false, inter:null});
+        roomList.push({roomName:roomInfo.roomName, roomPassword:roomInfo.roomPassword, selectGame:roomInfo.selectGame, roomId:roomId , host:socket.id, max:8, inUser:0, game:false});
         io.emit('roomList', roomList);
         socket.join(roomId);
         roomListUpdata(roomId, true);

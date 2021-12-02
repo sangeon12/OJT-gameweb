@@ -111,13 +111,32 @@
                         </div>
                     </div>
                     <div class="send">
-                        <button type="button" class="btn btn-outline-dark" @click="stopGame">나가기</button>
+                        <button type="button" class="btn btn-outline-dark" @click="outGame">나가기</button>
                         <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
                         <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
                     </div>
                 </div>
             </div>
        </transition>
+
+        <transition name="tr">
+            <div class="result-popup" key="result-popup" v-if="timeOver">
+                <div class="content">
+                    <div class="result-list">
+
+                    <div class="result" v-for="(user, index) in userList" :key="(user, index)">
+                        <div class="index">{{index + 1}}등</div>
+                        <div class="name">{{user.nickName}}</div>
+                        <div class="score">{{user.score}}점</div>
+                    </div>
+
+                    </div>
+                    <div class="button-menu">
+                        <button type="button" class="btn btn-dark">확인</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
     </div>
 </template>
 
@@ -126,7 +145,7 @@ export default {
     name: 'EndWord',
     mounted(){
         this.socket.removeAllListeners();
-        this.socket.on('endwordList', data => {this.userList = data});
+        this.socket.on('endwordList', data => {this.userList = data.sort((a,b)=>{return b.score - a.score})});
         this.socket.on('roomInfo', data => {this.roomInfo = data});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
@@ -151,7 +170,18 @@ export default {
             this.inputWord = '';
         });
         this.socket.on('wrongWord', () => {this.myTurn--; this.systemMsg('없는 단어입니다.'); return;});
-        this.socket.on('endwordCycle', () => {this.time--; if(this.time < 0) this.cycle();});
+        this.socket.on('endwordCycle', () => {
+            this.time--; 
+            if(this.time < 0){
+                if(this.turn !== this.myTurn){
+                    let stopUser = this.userList.find(x => x.id === this.socket.id);
+                    this.socket.emit('endwordCycleStop', stopUser);
+                }
+            } 
+        });
+        this.socket.on('endwordTimeover', data => {this.timeOver = true;});
+        this.socket.on('endwordGameRestart', data => {});
+        this.socket.on('endwordGameEnd', data => {});
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -162,7 +192,7 @@ export default {
             msgInput:'',
             chatList:[],
             wordList:[],
-            page:0,
+            page:-1,
             round:0,
             limitTime:0, //사용자가 정한 제한시간
             time:0, //실제 화면에서 보여지는 제한시간
@@ -172,7 +202,8 @@ export default {
             pageCycle:null,
             turn:0,
             myTurn:0,
-            setTime:1000
+            setTime:1000,
+            timeOver:false
         }
     },
     methods:{
@@ -210,7 +241,7 @@ export default {
             this.socket.emit('endwordReady');
         },
         gameStart(){
-            if(this.userList.length < 1){
+            if(this.userList.length < 2){
                 alert('게임을 시작하려면 유저가 2명 이상이 필요합니다!');
                 return;
             }
@@ -224,18 +255,19 @@ export default {
             }
             this.socket.emit('endwordGameStart', {roomId:this.roomInfo.roomId ,round:this.round, limitTime:this.limitTime});
         },
-        stopGame(){
+        outGame(){
             this.chatList = [];
             this.game = false;
         },
         cycle(){
             this.time = this.limitTime;
-            if(this.time < 0) this.page++;
+            this.page++;
             if(this.page === this.userList.length) this.page = 0; 
             this.turn++; 
             if(this.userList[this.page].id !== this.socket.id) this.myTurn++;
         },
         input(){
+            if(this.timeOver) return;
             if(this.turn === this.myTurn) return;
             if(this.userList[this.page].id !== this.socket.id) return;
             if(this.inputWord === "") return;
@@ -249,6 +281,9 @@ export default {
         systemMsg(msg){
             this.chatList.push({id:'SYSTEM', nickName:'SYSTEM', msg:msg}); 
             this.scroll(); 
+        },
+        endGame(){
+
         }
     }
 }
@@ -261,6 +296,55 @@ export default {
         height: 70%;
         background-color: white;
         border-radius: 10px;
+        position: relative;
+    }
+
+    .result-popup{      
+        position: absolute;    
+        width: 100%;
+        height: 100%;  
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .result-popup > .content{
+        width: 250px;   
+        height: 300px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        display: grid;
+        grid-template-rows: 5fr 1fr;
+        overflow: auto;
+        box-shadow: 3px 3px 3px gray;
+        border: 1px solid #cad4d8;
+    }
+
+    .result-popup > .content > .result-list{
+        margin-top: 10px;
+        text-align: center;
+        overflow-y: scroll; 
+        scrollbar-width: none;
+    }
+    .result-popup > .content > .result-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .result-popup > .content > .result-list > .result{
+        width: 90%;
+        margin: 0 auto;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        background-color: #d4d4d4;
+    }
+
+    .result-popup > .content > .button-menu{
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .title{
@@ -367,7 +451,9 @@ export default {
     }
 /*-------------------------------------------------------------------------------------------------------- */
     .play-room{
-        height: 100%;
+        position: absolute;
+        height: 100%;   
+        width: 100%;
         display: grid;
         grid-template-rows: 27px 3fr 2fr 2fr 5fr;
     } 
