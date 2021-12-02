@@ -238,7 +238,7 @@ export default {
             }
         },
         ready(){
-            this.socket.emit('endwordReady');
+            this.socket.emit('endwordReady', this.roomInfo.roomId);
         },
         gameStart(){
             if(this.userList.length < 2){
