@@ -138,7 +138,7 @@ export default {
     },
     logout(){
       if(confirm("로그아웃 하시겠습니까?") == true){
-        this.socket.emit('logout', this.socket.id);
+        this.socket.emit('logout');
         this.$router.go();
       }else{
         return;

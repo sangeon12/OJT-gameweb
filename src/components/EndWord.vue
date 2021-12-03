@@ -2,7 +2,7 @@
     <div id="endword">
 
         <transition name="tr" mode="out-in">
-            <div class="wait-room" v-if="!roomInfo.game" key="wait-room">
+            <div class="wait-room" v-if="!game" key="wait-room">
                 <div class="left">
                     <div class="title" style="border-radius : 10px 0px 0px 0px">방메뉴</div>
                     <div class="room-menu">
@@ -57,7 +57,7 @@
 
 
 
-            <div class="play-room" v-if="roomInfo.game" key="play-room">
+            <div class="play-room" v-if="game" key="play-room">
                 <div class="title info" style="border-radius : 10px 10px 0px 0px">
                     <h6>{{roomInfo.roomName}}({{roomInfo.roomId}})</h6>
                     <h6>끝말잇기</h6>
@@ -83,7 +83,7 @@
 
                 <div class="word-list">
                     <div class="words">
-                        <div class="word" v-for="word in wordList" :key="word">
+                        <div class="word" v-for="word in wordViewList" :key="word">
                             <div class="text">{{word.name}}</div>
                             <div class="meaning">{{word.content}}</div>
                         </div>
@@ -124,7 +124,7 @@
                 <div class="content">
                     <div class="result-list">
 
-                    <div class="result" v-for="(user, index) in userList" :key="(user, index)">
+                    <div class="result" v-for="(user, index) in sortUserList" :key="(user, index)">
                         <div class="index">{{index + 1}}등</div>
                         <div class="name">{{user.nickName}}</div>
                         <div class="score">{{user.score}}점</div>
@@ -132,7 +132,7 @@
 
                     </div>
                     <div class="button-menu">
-                        <button type="button" class="btn btn-dark">확인</button>
+                        <button type="button" class="btn btn-dark" @click="endGame">확인</button>
                     </div>
                 </div>
             </div>
@@ -145,25 +145,26 @@ export default {
     name: 'EndWord',
     mounted(){
         this.socket.removeAllListeners();
-        this.socket.on('endwordList', data => {this.userList = data.sort((a,b)=>{return b.score - a.score})});
-        this.socket.on('roomInfo', data => {this.roomInfo = data});
+        this.socket.on('endwordList', data => {this.userList = data;});
+        this.socket.on('roomInfo', data => {this.roomInfo = data;});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
-        this.socket.once('enwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        this.socket.once('endwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
         this.socket.on('endwordGameStart', data=>{
+            this.game = true;
             this.chatList = []; 
             this.round = data.round; 
-            let startWord = '가나다';  
-            this.startWord = startWord.substr(0, this.round);;
+            this.startWord = '가나다'.substr(0, this.round);;
             this.limitTime = data.limitTime; 
             if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
             this.cycle();
         });
         this.socket.on('resultWord', data=>{
-            if(this.wordList.length > 4) this.wordList.splice(0,1);
-            if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
-            else if(data[0].name.length > 10 && data[0].content.length <= 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content});
-            else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
-            else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordList.push(data[0]);
+            this.wordList.push(data[0]);
+            if(this.wordViewList.length > 4) this.wordViewList.splice(0,1);
+            if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordViewList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
+            else if(data[0].name.length > 10 && data[0].content.length <= 12) this.wordViewList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content});
+            else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordViewList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
+            else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordViewList.push(data[0]);
             this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
             this.endWord = data[0].name.substr(data[0].name.length - 1);
             this.cycle();
@@ -179,7 +180,7 @@ export default {
                 }
             } 
         });
-        this.socket.on('endwordTimeover', data => {this.timeOver = true;});
+        this.socket.on('endwordTimeover', data => {this.timeOver = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
         this.socket.on('endwordGameRestart', data => {});
         this.socket.on('endwordGameEnd', data => {});
         if(document.readyState == 'loading') location.href = '/#/';
@@ -189,9 +190,11 @@ export default {
             socket:this.$socket,
             roomInfo:[],
             userList:[],
+            sortUserList:[],
             msgInput:'',
             chatList:[],
             wordList:[],
+            wordViewList:[],
             page:-1,
             round:0,
             limitTime:0, //사용자가 정한 제한시간
@@ -199,16 +202,15 @@ export default {
             inputWord:'',
             startWord:'',
             endWord:'드',
-            pageCycle:null,
             turn:0,
             myTurn:0,
             setTime:1000,
-            timeOver:false
+            timeOver:false,
+            game:false //게임중인지 판별하는 변수
         }
     },
     methods:{
         sendMsg(){
-            if(this.msgInput === "") return;
             this.socket.emit('endwordMsg', {msg:this.msgInput, roomId:this.roomInfo.roomId});
             this.msgInput = '';
         },
@@ -241,7 +243,7 @@ export default {
             this.socket.emit('endwordReady', this.roomInfo.roomId);
         },
         gameStart(){
-            if(this.userList.length < 2){
+            if(this.userList.length < 1){
                 alert('게임을 시작하려면 유저가 2명 이상이 필요합니다!');
                 return;
             }
@@ -256,8 +258,7 @@ export default {
             this.socket.emit('endwordGameStart', {roomId:this.roomInfo.roomId ,round:this.round, limitTime:this.limitTime});
         },
         outGame(){
-            this.chatList = [];
-            this.game = false;
+            
         },
         cycle(){
             this.time = this.limitTime;
@@ -283,7 +284,19 @@ export default {
             this.scroll(); 
         },
         endGame(){
-
+            this.game = false;
+            this.round = 0;
+            this.limitTime = 0;
+            this.startWord = '';
+            this.inputWord = '';
+            this.turn = 0;
+            this.myTurn = 0;
+            this.timeOver = false;
+            this.page = -1;
+            this.wordList = [];
+            this.wordViewList = [];
+            this.chatList = [];
+            this.socket.emit('endwordEndGame', this.roomInfo.roomId);
         }
     }
 }
@@ -298,7 +311,7 @@ export default {
         border-radius: 10px;
         position: relative;
     }
-
+    
     .result-popup{      
         position: absolute;    
         width: 100%;
@@ -312,7 +325,7 @@ export default {
     .result-popup > .content{
         width: 250px;   
         height: 300px;
-        background-color: #f0f0f0;
+        background-color: #ffffff;
         border-radius: 5px;
         display: grid;
         grid-template-rows: 5fr 1fr;
@@ -338,7 +351,7 @@ export default {
         border-radius: 5px;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        background-color: #d4d4d4;
+        background-color: #e0e0e0;
     }
 
     .result-popup > .content > .button-menu{

@@ -55,7 +55,6 @@ export default {
     },
     methods:{
         sendMsg(){
-            if(this.msgInput === "") return;
             this.socket.emit('chatingMsg', {msg:this.msgInput, roomId:this.roomInfo.roomId});
             this.msgInput = '';
         },

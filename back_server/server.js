@@ -32,6 +32,7 @@ let roomInUser = []; //방에 들어온 유저 목록
 let chatingInUser = {}; //채팅방 참여자 목록
 let endWordInUser = {}; //끝말잇기게임 참여자 목록
 let log = []; //시스템 메시지가 저장되는 리스트
+let interList = [];
 
 const nullCheck = /\s/; //공백 체크
 
@@ -81,8 +82,8 @@ io.on("connect", socket =>{
         io.emit('roomList', roomList);
     });
 
-    socket.on('logout', data=>{
-        outUser(data, '님이 접송종료하셨습니다.', false);
+    socket.on('logout', ()=>{
+        outUser(socket.id, '님이 접송종료하셨습니다.', false);
     });
 
     socket.on('sendMsg', data =>{   
@@ -142,14 +143,13 @@ io.on("connect", socket =>{
     });
 
     socket.on('endwordGameStart', data=>{
+        io.to(data.roomId).emit('endwordGameStart', data);
         let roomInfo = roomList.find(x => x.roomId === data.roomId);
         roomInfo.game = true;
         io.to(data.roomId).emit('roomInfo', roomInfo);
         io.emit('roomList', roomList);
-        io.to(data.roomId).emit('endwordGameStart', data);
     });
 
-    let interList = [];
     socket.on('endwordCycle', data => {
         interList[data] = setInterval(()=>{
             io.to(data).emit('endwordCycle');
@@ -160,7 +160,7 @@ io.on("connect", socket =>{
         clearInterval(interList[data.roomId]);
         systemMsg(data.nickName + '님 실패!! 게임이 종료됩니다!!', data.roomId);
         let scoreUser = endWordInUser[data.roomId].find(x => x.id === socket.id);
-        scoreUser.score -= 15;
+        scoreUser.score -= 10;
         io.to(data.roomId).emit('endwordList', endWordInUser[data.roomId]);
         io.to(data.roomId).emit('endwordTimeover', endWordInUser[data.roomId]);
     });
@@ -183,6 +183,17 @@ io.on("connect", socket =>{
                     break
             }
         });
+    });
+
+    socket.on('endwordEndGame', data => {
+        let roomInfo = roomList.find(x => x.roomId === data);
+        roomInfo.game = false;
+        endWordInUser[data].forEach(e => {
+            e.score = 0;
+            e.ready = false;
+        });
+        io.to(socket.id).emit('endwordList', endWordInUser[data]);
+        io.to(socket.id).emit('roomInfo', roomInfo);
     });
 //---------------------------------------------------------------------------------------------[]
     socket.on('roomOut', () => {
@@ -270,6 +281,7 @@ io.on("connect", socket =>{
 
     function roomOut(id){ //방을 나갈 때 실행되는 함수
         let roomInUserInfo = roomInUser.find(x => x.id === id);
+        roomInUser.splice(roomInUser.findIndex(x => x.id === id), 1);
         let roomOutUser;
         if(roomInUserInfo === undefined) return;
         switch(roomInUserInfo.selectGame){
@@ -291,6 +303,7 @@ io.on("connect", socket =>{
 
     function roomKick(id){ //방에서 추방 당했을 때 실행되는 함수
         let roomInUserInfo = roomInUser.find(x => x.id === id);
+        roomInUser.splice(roomInUser.findIndex(x => x.id === id), 1);
         let roomOutUser;
         if(roomInUserInfo === undefined) return;
         switch(roomInUserInfo.selectGame){
@@ -300,9 +313,9 @@ io.on("connect", socket =>{
                 io.to(id).emit('chatingKickResult');
                 break
             case 'endword':
-                roomOutUser = endWordInUser[roomInUserInfo.roomId].splice(chatingInUser[roomInUserInfo.roomId].findIndex(x => x.id === id), 1)[0];
+                roomOutUser = endWordInUser[roomInUserInfo.roomId].splice(endWordInUser[roomInUserInfo.roomId].findIndex(x => x.id === id), 1)[0];
                 systemMsg(roomOutUser.nickName + '님이 추방당하셨습니다.', roomOutUser.roomId);
-                io.to(id).emit('chatingKickResult');
+                io.to(id).emit('endwordKickResult');
                 break
         }
     }
