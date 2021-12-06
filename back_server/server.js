@@ -33,6 +33,8 @@ let chatingInUser = {}; //채팅방 참여자 목록
 let endWordInUser = {}; //끝말잇기게임 참여자 목록
 let log = []; //시스템 메시지가 저장되는 리스트
 let interList = [];
+let phoneticRuleList = ['라','락','란','랄','람','랍','랑','래','랭','냑','략','냥','량','녀','려','녁','력','년','련','녈','렬','념','렴','렵','녕','령','녜','례','로','록','론','롱','뢰','뇨','료','룡','루','뉴','류','뉵','륙','륜','률','륭','륵','름','릉','니','리','린','림','립'];
+let phoneticRuleListResult = ['나','낙','난','날','남','납','낭','내','냉','약','약','양','양','여','여','역','역','연','연','열','열','염','염','엽','영','영','예','예','노','녹','논','농','뇌','요','요','용','누','유','유','육','육','윤','율','융','늑','늠','능','이','이','인','임','입'];
 
 const nullCheck = /\s/; //공백 체크
 
@@ -156,13 +158,24 @@ io.on("connect", socket =>{
         }, 1000);
     }); 
 
-    socket.on('endwordCycleStop', data => {
+    socket.on('endwordCycleRestart', data => {
         clearInterval(interList[data.roomId]);
-        systemMsg(data.nickName + '님 실패!! 게임이 종료됩니다!!', data.roomId);
+        systemMsg(data.nickName + '님 감점!! 게임이 곧 다시 시작됩니다!!', data.roomId);
         let scoreUser = endWordInUser[data.roomId].find(x => x.id === socket.id);
         scoreUser.score -= 10;
         io.to(data.roomId).emit('endwordList', endWordInUser[data.roomId]);
-        io.to(data.roomId).emit('endwordTimeover', endWordInUser[data.roomId]);
+        setTimeout(()=>{
+            io.to(data.roomId).emit('endwordGameRestart');
+        }, 2000);
+    });
+
+    socket.on('endwordCycleStop', data => {
+        clearInterval(interList[data.roomId]);
+        systemMsg(data.nickName + '님 감점!! 게임이 종료됩니다!!', data.roomId);
+        let scoreUser = endWordInUser[data.roomId].find(x => x.id === socket.id);
+        scoreUser.score -= 10;
+        io.to(data.roomId).emit('endwordList', endWordInUser[data.roomId]);
+        io.to(data.roomId).emit('endwordGameEnd', endWordInUser[data.roomId]);
     });
 
     socket.on('endwordScore', data => {
@@ -179,7 +192,16 @@ io.on("connect", socket =>{
                     socket.emit('wrongWord');
                     break
                 default:
-                    io.to(data.roomId).emit('resultWord', v.result);
+                    let wordInfo;
+                    if(v.result[0].name.length <= 10 && v.result[0].content.length > 11) wordInfo = {name:v.result[0].name, content:v.result[0].content.substring(0, 11)+'...'};
+                    else if(v.result[0].name.length > 10 && v.result[0].content.length <= 12) wordInfo ={name:v.result[0].name.substring(0, 9)+'...', content:v.result[0].content};
+                    else if(v.result[0].name.length > 10 && v.result[0].content.length > 12) wordInfo = {name:v.result[0].name.substring(0, 9)+'...', content:v.result[0].content.substring(0, 11)+'...'};
+                    else if(v.result[0].name.length <= 10 && v.result[0].content.length <= 12) wordInfo = v.result[0];
+                    let endword = v.result[0].name.substr(v.result[0].name.length - 1);
+                    let phoneticRule = null;
+                    let endwordIndex = phoneticRuleList.findIndex(x => x === endword);
+                    if(endwordIndex >= 0) phoneticRule = phoneticRuleListResult[endwordIndex];
+                    io.to(data.roomId).emit('resultWord', {result:v.result[0], contraction:wordInfo, endword:endword, phoneticRule:phoneticRule});
                     break
             }
         });
@@ -269,21 +291,22 @@ io.on("connect", socket =>{
     }
 
     function outUser(id, msg, kick){ //소켓 id, 시스템 메시지, 추방 여부등을 받아 유저를 로그아웃 시키는 함수
+        roomOut(id);
         let idx = userList.findIndex(x => x.id === id);
         if(idx < 0) return;
         let outUser = userList.splice(idx, 1)[0];
         if(outUser.admin) adminOn = false;
         systemMsg(outUser.nickName + msg, null);
         io.emit('userList', userList);
-        roomOut(id);
         if(kick) io.to(id).emit('kickResult');
     }
 
     function roomOut(id){ //방을 나갈 때 실행되는 함수
         let roomInUserInfo = roomInUser.find(x => x.id === id);
-        roomInUser.splice(roomInUser.findIndex(x => x.id === id), 1);
-        let roomOutUser;
         if(roomInUserInfo === undefined) return;
+        roomInUser.splice(roomInUser.findIndex(x => x.id === id), 1);
+        io.to(roomInUserInfo.roomId).emit(roomInUserInfo.selectGame+'Out', roomInUserInfo.id);
+        let roomOutUser;
         switch(roomInUserInfo.selectGame){
             case 'chating':
                 roomOutUser = chatingInUser[roomInUserInfo.roomId].splice(chatingInUser[roomInUserInfo.roomId].findIndex(x => x.id === id), 1)[0];

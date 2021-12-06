@@ -70,7 +70,8 @@
                     <div class="content">
                         <h6>{{startWord}}</h6>
                         <div class="word-time">
-                            <div class="end-word">{{endWord}}</div>
+                            <div class="end-word" v-if="phoneticRule !== null">{{endWord}}({{phoneticRule}})</div>
+                            <div class="end-word" v-else>{{endWord}}</div>
                             <div class="time">
                                 <progress :max="limitTime" :value="time"></progress>
                                 <div class="num" v-if="time >= 0">{{time}}</div>
@@ -111,7 +112,7 @@
                         </div>
                     </div>
                     <div class="send">
-                        <button type="button" class="btn btn-outline-dark" @click="outGame">나가기</button>
+                        <button type="button" class="btn btn-outline-dark" @click="outRoom">나가기</button>
                         <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
                         <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
                     </div>
@@ -120,7 +121,7 @@
        </transition>
 
         <transition name="tr">
-            <div class="result-popup" key="result-popup" v-if="timeOver">
+            <div class="result-popup" key="result-popup" v-if="gameEnd">
                 <div class="content">
                     <div class="result-list">
 
@@ -148,25 +149,24 @@ export default {
         this.socket.on('endwordList', data => {this.userList = data;});
         this.socket.on('roomInfo', data => {this.roomInfo = data;});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
+        this.socket.on('kickResult', ()=>{this.$router.go();})
         this.socket.once('endwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
         this.socket.on('endwordGameStart', data=>{
             this.game = true;
             this.chatList = []; 
             this.round = data.round; 
-            this.startWord = '가나다'.substr(0, this.round);;
+            this.startWord = '가나다'.substr(0, this.round);
             this.limitTime = data.limitTime; 
             if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
             this.cycle();
         });
         this.socket.on('resultWord', data=>{
-            this.wordList.push(data[0]);
+            this.wordList.push(data.result);
             if(this.wordViewList.length > 4) this.wordViewList.splice(0,1);
-            if(data[0].name.length <= 10 && data[0].content.length > 11) this.wordViewList.push({name:data[0].name, content:data[0].content.substring(0, 11)+'...'});
-            else if(data[0].name.length > 10 && data[0].content.length <= 12) this.wordViewList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content});
-            else if(data[0].name.length > 10 && data[0].content.length > 12) this.wordViewList.push({name:data[0].name.substring(0, 9)+'...', content:data[0].content.substring(0, 11)+'...'});
-            else if(data[0].name.length <= 10 && data[0].content.length <= 12) this.wordViewList.push(data[0]);
-            this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data[0].name.length, time:this.time});
-            this.endWord = data[0].name.substr(data[0].name.length - 1);
+            this.wordViewList.push(data.contraction);
+            this.socket.emit('endwordScore', {roomId:this.roomInfo.roomId, id:this.userList[this.page].id, le:data.result.name.length, time:this.time});
+            this.endWord = data.endword;
+            this.phoneticRule = data.phoneticRule;
             this.cycle();
             this.inputWord = '';
         });
@@ -176,13 +176,27 @@ export default {
             if(this.time < 0){
                 if(this.turn !== this.myTurn){
                     let stopUser = this.userList.find(x => x.id === this.socket.id);
-                    this.socket.emit('endwordCycleStop', stopUser);
+                    if(parseInt(this.round) === 1 || this.round === 1) this.socket.emit('endwordCycleStop', stopUser);
+                    else this.socket.emit('endwordCycleRestart', stopUser);
                 }
             } 
         });
-        this.socket.on('endwordTimeover', data => {this.timeOver = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
-        this.socket.on('endwordGameRestart', data => {});
-        this.socket.on('endwordGameEnd', data => {});
+        this.socket.on('endwordGameRestart', data => {
+            this.round--;
+            this.page = -1;
+            this.startWord = '가나다'.substr(0, this.round);
+            this.inputWord = '';
+            this.endWord = '가';
+            this.phoneticRule = null;
+            this.wordList = [];
+            this.wordViewList = [];
+            this.turn = 0;
+            this.myTurn = 0;
+            if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
+            this.cycle();
+        });
+        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
+        this.socket.on('endwordOut', data => {if(this.userList[this.page].id === data) this.cycle();});
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -201,11 +215,12 @@ export default {
             time:0, //실제 화면에서 보여지는 제한시간
             inputWord:'',
             startWord:'',
-            endWord:'드',
+            endWord:'가',
+            phoneticRule:null,
             turn:0,
             myTurn:0,
             setTime:1000,
-            timeOver:false,
+            gameEnd:false,
             game:false //게임중인지 판별하는 변수
         }
     },
@@ -257,25 +272,29 @@ export default {
             }
             this.socket.emit('endwordGameStart', {roomId:this.roomInfo.roomId ,round:this.round, limitTime:this.limitTime});
         },
-        outGame(){
-            
-        },
         cycle(){
             this.time = this.limitTime;
             this.page++;
             if(this.page === this.userList.length) this.page = 0; 
             this.turn++; 
             if(this.userList[this.page].id !== this.socket.id) this.myTurn++;
-        },
+        }, 
         input(){
-            if(this.timeOver) return;
-            if(this.turn === this.myTurn) return;
+            if(this.gameEnd) return;
             if(this.userList[this.page].id !== this.socket.id) return;
+            if(this.turn === this.myTurn) return;
+            if(this.time === 0) return;
             if(this.inputWord === "") return;
+            if(this.inputWord.indexOf(" ") >= 0) return;
             if(this.wordList.findIndex(x => x.name === this.inputWord) >= 0){this.systemMsg('중복되는 단어입니다.'); return;}
             if(this.inputWord.length <= 1){this.systemMsg('2자리 이상의 단어만 사용 가능합니다.'); return;}
-            if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('('+this.endWord+')로 시작하는 단어만 사용가능합니다.'); return;}
-            if(this.time === 0) return;
+            if(this.phoneticRule !== null){
+                if(this.inputWord.indexOf(this.endWord) === 0);
+                else if(this.inputWord.indexOf(this.phoneticRule) === 0);
+                else {this.systemMsg('"' + this.endWord+'(' + this.phoneticRule + ')" 로(으로) 시작하는 단어만 사용가능합니다.'); return;}
+            }else{
+                if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('"' + this.endWord+'" 로(으로) 시작하는 단어만 사용가능합니다.'); return;}
+            }
             this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
             this.myTurn++;
         },
@@ -289,9 +308,11 @@ export default {
             this.limitTime = 0;
             this.startWord = '';
             this.inputWord = '';
+            this.endWord = '가';
+            this.phoneticRule = null;
             this.turn = 0;
             this.myTurn = 0;
-            this.timeOver = false;
+            this.gameEnd = false;
             this.page = -1;
             this.wordList = [];
             this.wordViewList = [];
