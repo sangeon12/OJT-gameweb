@@ -10,7 +10,6 @@
           <option selected>방종류</option>
           <option value="chating">채팅방</option>
           <option value="endword">끝말잇기</option>
-          <option value="mafia">마피아</option>
         </select>
         <button type="button" class="btn btn-warning" @click="createRoom">만들기</button>
         <button type="button" class="btn btn-info" @click="createRoomView = false">취소</button>
