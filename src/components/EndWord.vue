@@ -185,7 +185,7 @@ export default {
         this.socket.on('endwordGameRestart', data => {
             this.round--;
             this.page = -1;
-            this.startWord = '가나다'.substr(1, this.round);
+            this.startWord = this.startWord.substr(1);
             this.inputWord = '';
             this.endWord = this.startWord.substr(0, 1);
             this.phoneticRule = null;
