@@ -196,7 +196,7 @@ export default {
             this.cycle();
         });
         this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
-        this.socket.on('endwordOut', data => {if(this.userList[this.page].id === data) this.cycle();});
+        this.socket.on('endwordOut', data => {this.game && this.userList[this.page].id === data && this.cycle();});
         if(document.readyState == 'loading') location.href = '/#/';
     },  
     data(){
@@ -450,6 +450,7 @@ export default {
     }
 
     .wait-room > .right{
+        border-radius: 0px 0px 0px 5px;
         overflow: auto;
     }
 

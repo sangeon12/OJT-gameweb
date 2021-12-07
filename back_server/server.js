@@ -166,7 +166,7 @@ io.on("connect", socket =>{
         io.to(data.roomId).emit('endwordList', endWordInUser[data.roomId]);
         setTimeout(()=>{
             io.to(data.roomId).emit('endwordGameRestart');
-        }, 2000);
+        }, 3000);
     });
 
     socket.on('endwordCycleStop', data => {
@@ -187,21 +187,21 @@ io.on("connect", socket =>{
 
     socket.on('searchWord', data =>{
         getWord(data.word).then((v) => {
-            switch(v.result[0].content){
+            switch(v.result.content){
                 case null:
                     socket.emit('wrongWord');
                     break
                 default:
                     let wordInfo;
-                    if(v.result[0].name.length <= 10 && v.result[0].content.length > 11) wordInfo = {name:v.result[0].name, content:v.result[0].content.substring(0, 11)+'...'};
-                    else if(v.result[0].name.length > 10 && v.result[0].content.length <= 12) wordInfo ={name:v.result[0].name.substring(0, 9)+'...', content:v.result[0].content};
-                    else if(v.result[0].name.length > 10 && v.result[0].content.length > 12) wordInfo = {name:v.result[0].name.substring(0, 9)+'...', content:v.result[0].content.substring(0, 11)+'...'};
-                    else if(v.result[0].name.length <= 10 && v.result[0].content.length <= 12) wordInfo = v.result[0];
-                    let endword = v.result[0].name.substr(v.result[0].name.length - 1);
+                    if(v.result.name.length <= 10 && v.result.content.length > 11) wordInfo = {name:v.result.name, content:v.result.content.substring(0, 11)+'...'};
+                    else if(v.result.name.length > 10 && v.result.content.length <= 12) wordInfo ={name:v.result.name.substring(0, 9)+'...', content:v.result.content};
+                    else if(v.result.name.length > 10 && v.result.content.length > 12) wordInfo = {name:v.result.name.substring(0, 9)+'...', content:v.result.content.substring(0, 11)+'...'};
+                    else if(v.result.name.length <= 10 && v.result.content.length <= 12) wordInfo = v.result;
+                    let endword = v.result.name.substr(v.result.name.length - 1);
                     let phoneticRule = null;
                     let endwordIndex = phoneticRuleList.findIndex(x => x === endword);
                     if(endwordIndex >= 0) phoneticRule = phoneticRuleListResult[endwordIndex];
-                    io.to(data.roomId).emit('resultWord', {result:v.result[0], contraction:wordInfo, endword:endword, phoneticRule:phoneticRule});
+                    io.to(data.roomId).emit('resultWord', {result:v.result, contraction:wordInfo, endword:endword, phoneticRule:phoneticRule});
                     break
             }
         });
@@ -263,7 +263,7 @@ io.on("connect", socket =>{
             default:
                 if(roomInfo !== undefined) io.to(getRoomId).emit(roomInfo.selectGame+'Awesome', {id:'SYSTEM', nickName:'SYSTEM', msg:msg});   
                 break;
-        }
+        }   
     }
 
     function roomListUpdata(getRoomId, inOut){ //방정보를 업데이트하고 방정보를 client에 보내는 함수
@@ -319,6 +319,7 @@ io.on("connect", socket =>{
                 socket.leave(roomOutUser.roomId);
                 roomListUpdata(roomOutUser.roomId, false);
                 systemMsg(roomOutUser.nickName + '님이 나가셨습니다.', roomOutUser.roomId);
+                if(endWordInUser[roomInUserInfo.roomId].length === 0) clearInterval(interList[roomInUserInfo.roomId]);
                 break
         }
         socket.emit('userList', userList);
@@ -326,9 +327,9 @@ io.on("connect", socket =>{
 
     function roomKick(id){ //방에서 추방 당했을 때 실행되는 함수
         let roomInUserInfo = roomInUser.find(x => x.id === id);
+        if(roomInUserInfo === undefined) return;
         roomInUser.splice(roomInUser.findIndex(x => x.id === id), 1);
         let roomOutUser;
-        if(roomInUserInfo === undefined) return;
         switch(roomInUserInfo.selectGame){
             case 'chating':
                 roomOutUser = chatingInUser[roomInUserInfo.roomId].splice(chatingInUser[roomInUserInfo.roomId].findIndex(x => x.id === id), 1)[0];
