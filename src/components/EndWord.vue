@@ -156,6 +156,7 @@ export default {
             this.chatList = []; 
             this.round = data.round; 
             this.startWord = '가나다'.substr(0, this.round);
+            this.endWord = this.startWord.substr(0, 1);
             this.limitTime = data.limitTime; 
             if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
             this.cycle();
@@ -184,9 +185,9 @@ export default {
         this.socket.on('endwordGameRestart', data => {
             this.round--;
             this.page = -1;
-            this.startWord = '가나다'.substr(0, this.round);
+            this.startWord = '가나다'.substr(1, this.round);
             this.inputWord = '';
-            this.endWord = '가';
+            this.endWord = this.startWord.substr(0, 1);
             this.phoneticRule = null;
             this.wordList = [];
             this.wordViewList = [];
@@ -215,11 +216,10 @@ export default {
             time:0, //실제 화면에서 보여지는 제한시간
             inputWord:'',
             startWord:'',
-            endWord:'가',
+            endWord:'',
             phoneticRule:null,
             turn:0,
             myTurn:0,
-            setTime:1000,
             gameEnd:false,
             game:false //게임중인지 판별하는 변수
         }
