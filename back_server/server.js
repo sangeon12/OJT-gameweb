@@ -32,7 +32,7 @@ let roomInUser = []; //방에 들어온 유저 목록
 let chatingInUser = {}; //채팅방 참여자 목록
 let endWordInUser = {}; //끝말잇기게임 참여자 목록
 let log = []; //시스템 메시지가 저장되는 리스트
-let interList = [];
+let interList = []; //게임 시간제한을 위한 인터벌을 각 방마다 저장하는 리스트
 let phoneticRuleList = ['라','락','란','랄','람','랍','랑','래','랭','냑','략','냥','량','녀','려','녁','력','년','련','녈','렬','념','렴','렵','녕','령','녜','례','로','록','론','롱','뢰','뇨','료','룡','루','뉴','류','뉵','륙','륜','률','륭','륵','름','릉','니','리','린','림','립'];
 let phoneticRuleListResult = ['나','낙','난','날','남','납','낭','내','냉','약','약','양','양','여','여','역','역','연','연','열','열','염','염','엽','영','영','예','예','노','녹','논','농','뇌','요','요','용','누','유','유','육','육','윤','율','융','늑','늠','능','이','이','인','임','입'];
 
@@ -48,9 +48,9 @@ app.post('/checkNickname', async (req, res) =>{ //사용하지 못하는 닉네�
         res.json(1); //닉네임이 중복될 때
         return;
     }
-    if(nickName.indexOf('임상언') >= 0 || nickName.indexOf('관리자') >= 0){
-        res.json(2); //닉네임에 관리자, 임상언이 포합될 때
-        return;
+    if(nickName.indexOf('임상언') >= 0){
+        res.json(2); //닉네임에 임상언이 포합될 때
+        return; 
     }
     if(nickName === adminPassword){
         if(adminOn){
@@ -74,7 +74,7 @@ io.on("connect", socket =>{
         let nickName = data;
         let admin = false;
         if(data === adminPassword){
-            nickName = '임상언(관리자)'; 
+            nickName = '임상언'; 
             admin = true;
             adminOn = true;
         } 
@@ -185,6 +185,13 @@ io.on("connect", socket =>{
         io.to(data.roomId).emit('endwordList', endWordInUser[data.roomId]);
     });
 
+    socket.on('endwordSolo', data =>{
+        console.log('실행');
+        clearInterval(interList[data]);
+        systemMsg('게임이 종료됩니다!!', data);
+        io.to(data).emit('endwordGameEnd', endWordInUser[data]);
+    })
+
     socket.on('searchWord', data =>{
         getWord(data.word).then((v) => {
             switch(v.result.content){
@@ -216,6 +223,7 @@ io.on("connect", socket =>{
         });
         io.to(socket.id).emit('endwordList', endWordInUser[data]);
         io.to(socket.id).emit('roomInfo', roomInfo);
+        io.emit('roomList', roomList);
     });
 //---------------------------------------------------------------------------------------------[]
     socket.on('roomOut', () => {

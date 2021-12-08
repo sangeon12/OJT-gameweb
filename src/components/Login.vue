@@ -43,7 +43,7 @@ export default {
                         break;
                     case 5:
                         this.$socket.emit('login', this.nickName);
-                        location.href = "/#/main"
+                        location.replace("/#/main");
                         break;
               }
           });

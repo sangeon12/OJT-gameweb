@@ -87,7 +87,7 @@ export default {
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
     this.socket.on('kickResult', ()=>{this.$router.go();})
     this.socket.on('roomList', data=>{this.roomList = data});
-    if(document.readyState == 'loading') location.href = '/#/';
+    if(document.readyState == 'loading') location.replace('/#/');
   },
   data(){
     return{
@@ -156,7 +156,7 @@ export default {
       this.socket.emit(selectGame, {roomName:this.createRoomName, roomPassword:this.createRoomPassword, selectGame:selectGame});
       this.createRoomName = '';
       this.createRoomPassword = '';
-      location.href = "/#/"+selectGame;
+      location.replace("/#/"+selectGame);
     },
     enterRoom(roomId){
       let roomInfo = this.roomList.find(x => x.roomId === roomId);
@@ -177,7 +177,7 @@ export default {
       }
       if(confirm("방에들어가시겠습니까?") == true){
             this.socket.emit(roomInfo.selectGame+'In', roomInfo.roomId);
-            location.href = "/#/"+roomInfo.selectGame;
+            location.replace("/#/"+roomInfo.selectGame);
       }else{
             return;
       }

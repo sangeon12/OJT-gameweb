@@ -146,11 +146,11 @@ export default {
     name: 'EndWord',
     mounted(){
         this.socket.removeAllListeners();
-        this.socket.on('endwordList', data => {this.userList = data;});
+        this.socket.on('endwordList', data => {this.userList = data; this.game && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);});
         this.socket.on('roomInfo', data => {this.roomInfo = data;});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.on('kickResult', ()=>{this.$router.go();})
-        this.socket.once('endwordKickResult', ()=>{ location.href = "/#/main"; this.socket.emit('leaveRoom', this.roomInfo.roomId)});
+        this.socket.once('endwordKickResult', ()=>{ location.replace("/#/main"); this.socket.emit('leaveRoom', this.roomInfo.roomId)});
         this.socket.on('endwordGameStart', data=>{
             this.game = true;
             this.chatList = []; 
@@ -198,7 +198,7 @@ export default {
         });
         this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
         this.socket.on('endwordOut', data => {this.game && this.userList[this.page].id === data && this.cycle();});
-        if(document.readyState == 'loading') location.href = '/#/';
+        if(document.readyState == 'loading') location.replace('/#/');
     },  
     data(){
         return{
@@ -239,7 +239,7 @@ export default {
         outRoom(){
             if(confirm("정말 나가시겠습니까?") == true){
                 this.socket.emit('roomOut');
-                location.href = "/#/main";
+                location.replace("/#/main");
             }else{
                 return;
             }
@@ -258,7 +258,7 @@ export default {
             this.socket.emit('endwordReady', this.roomInfo.roomId);
         },
         gameStart(){
-            if(this.userList.length < 1){
+            if(this.userList.length < 2){
                 alert('게임을 시작하려면 유저가 2명 이상이 필요합니다!');
                 return;
             }
@@ -283,7 +283,7 @@ export default {
             if(this.gameEnd) return;
             if(this.userList[this.page].id !== this.socket.id) return;
             if(this.turn === this.myTurn) return;
-            if(this.time === 0) return;
+            if(this.time <= 0) return;
             if(this.inputWord === "") return;
             if(this.inputWord.indexOf(" ") >= 0) return;
             if(this.wordList.findIndex(x => x.name === this.inputWord) >= 0){this.systemMsg('중복되는 단어입니다.'); return;}
@@ -296,7 +296,7 @@ export default {
                 if(this.inputWord.indexOf(this.endWord) !== 0){this.systemMsg('"' + this.endWord+'" 로(으로) 시작하는 단어만 사용가능합니다.'); return;}
             }
             this.socket.emit('searchWord', {word:this.inputWord, roomId:this.roomInfo.roomId});
-            this.myTurn++;
+            this.myTurn++;  
         },
         systemMsg(msg){
             this.chatList.push({id:'SYSTEM', nickName:'SYSTEM', msg:msg}); 

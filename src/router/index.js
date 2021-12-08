@@ -7,7 +7,7 @@ import EndWord from '@/components/EndWord'
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   routes: [
     {
       path: '/',
@@ -27,7 +27,13 @@ export default new Router({
     {
       path: '/endword',
       name: 'EndWord',
-      component: EndWord
+      component: EndWord  
     }
   ]
-})
+});
+export default router;
+
+router.beforeEach( (to, from, next) => {
+  console.log(from);
+  next();
+});
