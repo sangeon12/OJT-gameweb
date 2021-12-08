@@ -43,6 +43,7 @@ export default {
                         break;
                     case 5:
                         this.$socket.emit('login', this.nickName);
+                        for(let i = 1; i < 4; i++) this.$router.options.routes[i].meta.isLogin = true;
                         location.replace("/#/main");
                         break;
               }

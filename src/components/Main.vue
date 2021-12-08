@@ -153,6 +153,8 @@ export default {
         alert("방 이름이 너무 깁니다!! 5글자 이하로 작성해주세요.");
         return;
       }
+      if(selectGame === 'chating') this.$router.options.routes[2].meta.inRoom = true;
+      else if(selectGame === 'endword') this.$router.options.routes[3].meta.inRoom = true;
       this.socket.emit(selectGame, {roomName:this.createRoomName, roomPassword:this.createRoomPassword, selectGame:selectGame});
       this.createRoomName = '';
       this.createRoomPassword = '';
@@ -176,8 +178,10 @@ export default {
         }
       }
       if(confirm("방에들어가시겠습니까?") == true){
-            this.socket.emit(roomInfo.selectGame+'In', roomInfo.roomId);
-            location.replace("/#/"+roomInfo.selectGame);
+          if(roomInfo.selectGame === 'chating') this.$router.options.routes[2].meta.inRoom = true;
+          else if(roomInfo.selectGame === 'endword') this.$router.options.routes[3].meta.inRoom = true;
+          this.socket.emit(roomInfo.selectGame+'In', roomInfo.roomId);
+          location.replace("/#/"+roomInfo.selectGame);
       }else{
             return;
       }
