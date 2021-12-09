@@ -146,7 +146,14 @@ export default {
     name: 'EndWord',
     mounted(){
         this.socket.removeAllListeners();
-        this.socket.on('endwordList', data => {this.userList = data; this.game && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);});
+        this.socket.on('endwordList', data => {
+            this.userList = data;  
+            this.game && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);
+            if(this.game){
+                this.turn++; 
+                if(this.userList[this.page].id !== this.socket.id) this.myTurn++;
+            }
+        });
         this.socket.on('roomInfo', data => {this.roomInfo = data;});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.on('kickResult', ()=>{this.$router.go();})
@@ -197,8 +204,7 @@ export default {
             this.cycle();
         });
         this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
-        this.socket.on('endwordOut', data => {this.game && this.userList[this.page].id === data && this.cycle();});
-        if(document.readyState == 'loading') location.replace('/#/');
+        this.socket.on('endwordOut', data => {if(this.game) if(this.userList[this.page].id === data) this.time = this.limitTime;});
     },  
     data(){
         return{
@@ -238,6 +244,7 @@ export default {
         },
         outRoom(){
             if(confirm("정말 나가시겠습니까?") == true){
+                this.$router.options.routes[3].meta.inRoom = false;
                 this.socket.emit('roomOut');
                 location.replace("/#/main");
             }else{
@@ -278,7 +285,7 @@ export default {
             if(this.page === this.userList.length) this.page = 0; 
             this.turn++; 
             if(this.userList[this.page].id !== this.socket.id) this.myTurn++;
-        }, 
+        },
         input(){
             if(this.gameEnd) return;
             if(this.userList[this.page].id !== this.socket.id) return;

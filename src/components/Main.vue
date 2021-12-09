@@ -87,7 +87,6 @@ export default {
     this.socket.on('awesome', data=>{this.chatList.push(data); this.scroll();});
     this.socket.on('kickResult', ()=>{this.$router.go();})
     this.socket.on('roomList', data=>{this.roomList = data});
-    if(document.readyState == 'loading') location.replace('/#/');
   },
   data(){
     return{

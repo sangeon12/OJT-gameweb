@@ -43,7 +43,6 @@ export default {
         this.socket.on('chatingAwesome', data =>{this.chatList.push(data); this.scroll();});
         this.socket.on('kickResult', ()=>{this.$router.go();})
         this.socket.on('chatingKickResult', ()=>{location.replace('/#/main'); this.socket.emit('leaveRoom', this.roomInfo.roomId);});
-        if(document.readyState == 'loading') location.replace('/#/');
     },
     data(){
         return{
@@ -68,6 +67,7 @@ export default {
         },
         outRoom(){
             if(confirm("정말 나가시겠습니까?") == true){
+                this.$router.options.routes[2].meta.inRoom = false;
                 this.socket.emit('roomOut');
                 location.replace('/#/main');
             }else{

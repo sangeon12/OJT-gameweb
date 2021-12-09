@@ -46,21 +46,29 @@ export default router;
 
 router.beforeEach( (to, from, next) => {
   if(to.fullPath !== "/"){
+
     if(document.readyState == 'loading'){
-      next();
+      next('/');
       return;
     } 
-    if(!to.meta.isLogin){
-      alert('먼저 로그인을 해주세요.');
-      return;
-    }
-  }
 
-  if(to.fullPath !== "/" && to.fullPath !== "/main"){
-    if(!to.meta.inRoom){
-      alert('먼저 방에 들어가주세요.');
+    if(to.meta.isLogin !== undefined){
+      if(!to.meta.isLogin){
+        alert('먼저 로그인을 해주세요.');
+        return;
+      }
+    }else{
+      alert('잘못된 URL주소입니다.');
       return;
     }
+
+    if(to.meta.inRoom !== undefined){
+      if(!to.meta.inRoom){
+        alert('먼저 방에 들어가주세요.');
+        return;
+      }
+    }
+    
   }
   next();
 });

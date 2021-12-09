@@ -282,6 +282,7 @@ io.on("connect", socket =>{
                 io.to(getRoomId).emit(roomInfo.selectGame+'List', chatingInUser[getRoomId]);
                 break
             case 'endword':
+                io.to(getRoomId).emit(roomInfo.selectGame+'Out', socket.id);
                 io.to(getRoomId).emit(roomInfo.selectGame+'List', endWordInUser[getRoomId]);
                 break
         }
@@ -313,7 +314,6 @@ io.on("connect", socket =>{
         let roomInUserInfo = roomInUser.find(x => x.id === id);
         if(roomInUserInfo === undefined) return;
         roomInUser.splice(roomInUser.findIndex(x => x.id === id), 1);
-        io.to(roomInUserInfo.roomId).emit(roomInUserInfo.selectGame+'Out', roomInUserInfo.id);
         let roomOutUser;
         switch(roomInUserInfo.selectGame){
             case 'chating':
