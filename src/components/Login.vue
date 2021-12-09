@@ -26,11 +26,11 @@ export default {
                         this.nickName = '';
                         break;
                     case 1:
-                        alert('중복되는 닉네임 입니다.');
+                        alert('사용할 수 없는 닉네임입니다.');
                         this.nickName = '';
                         break;
                     case 2:
-                        alert('사용할 수 없는 닉네임입니다.');
+                        alert('중복되는 닉네임 입니다.');
                         this.nickName = '';
                         break;
                     case 3:

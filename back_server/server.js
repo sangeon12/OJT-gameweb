@@ -22,9 +22,9 @@ app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
 const {getWord} = require('./searchWord.js');
+const {adminPassword, adminNickName} = require('./admin.json'); //관리자 패스워드와 닉네임을 가져옴
 
 let userList = []; //현재 접속한 유저 리스트
-let adminPassword = 'admin'; //관리자 패스워드
 let adminOn = false; //관리자 접속 여부
 let roomId = 0;
 let roomList = []; //방목록
@@ -44,13 +44,13 @@ app.post('/checkNickname', async (req, res) =>{ //사용하지 못하는 닉네�
         res.json(0); //닉네임에 공백이 포함될 때
         return;
     }
-    if(userList.findIndex(x => x.nickName === nickName) >= 0){
-        res.json(1); //닉네임이 중복될 때
-        return;
-    }
-    if(nickName.indexOf('임상언') >= 0){
-        res.json(2); //닉네임에 임상언이 포합될 때
+    if(nickName.indexOf(adminNickName) >= 0){
+        res.json(1); //닉네임에 임상언이 포합될 때
         return; 
+    }
+    if(userList.findIndex(x => x.nickName === nickName) >= 0){
+        res.json(2); //닉네임이 중복될 때
+        return;
     }
     if(nickName === adminPassword){
         if(adminOn){
@@ -59,8 +59,10 @@ app.post('/checkNickname', async (req, res) =>{ //사용하지 못하는 닉네�
         }
     }
     if(nickName.length > 5){
-        res.json(4); //닉네임이 5글자를 넘을 때
-        return;
+        if(nickName !== adminPassword){
+            res.json(4); //닉네임이 5글자를 넘을 때
+            return;
+        }
     }
     res.json(5); //아무 이상없을 떄
 });
@@ -74,7 +76,7 @@ io.on("connect", socket =>{
         let nickName = data;
         let admin = false;
         if(data === adminPassword){
-            nickName = '임상언'; 
+            nickName = adminNickName; 
             admin = true;
             adminOn = true;
         } 
@@ -186,7 +188,6 @@ io.on("connect", socket =>{
     });
 
     socket.on('endwordSolo', data =>{
-        console.log('실행');
         clearInterval(interList[data]);
         systemMsg('게임이 종료됩니다!!', data);
         io.to(data).emit('endwordGameEnd', endWordInUser[data]);

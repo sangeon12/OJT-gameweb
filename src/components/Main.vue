@@ -170,10 +170,13 @@ export default {
           return;
       }
       if(roomInfo.roomPassword !== ""){
-        let passwordAlert = prompt( '비밀번호를 입력해주세요.', ''); 
-        if(passwordAlert !== roomInfo.roomPassword){
-          alert('비밀번호가 틀렸습니다.');
-          return; 
+        let userInfo = this.userList.find(x => x.id === this.socket.id);
+        if(!userInfo.admin){
+          let passwordAlert = prompt( '비밀번호를 입력해주세요.', ''); 
+          if(passwordAlert !== roomInfo.roomPassword){
+            alert('비밀번호가 틀렸습니다.');
+            return; 
+          }
         }
       }
       if(confirm("방에들어가시겠습니까?") == true){

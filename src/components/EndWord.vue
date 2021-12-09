@@ -147,11 +147,12 @@ export default {
     mounted(){
         this.socket.removeAllListeners();
         this.socket.on('endwordList', data => {
-            this.userList = data;  
-            this.game && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);
+            this.userList = data;
             if(this.game){
-                this.turn++; 
-                if(this.userList[this.page].id !== this.socket.id) this.myTurn++;
+                if(data.length === 1){
+                    this.page = 0;
+                    this.socket.emit('endwordSolo', this.roomInfo.roomId);
+                }
             }
         });
         this.socket.on('roomInfo', data => {this.roomInfo = data;});
@@ -203,8 +204,18 @@ export default {
             if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
             this.cycle();
         });
-        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score})});
-        this.socket.on('endwordOut', data => {if(this.game) if(this.userList[this.page].id === data) this.time = this.limitTime;});
+        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score});});
+        this.socket.on('endwordOut', data => {
+            let userIndex = this.userList.findIndex(x => x.id === data);
+            if(this.game) if(this.page === userIndex){
+                this.time = this.limitTime;
+                this.turn = 1;
+                this.myTurn = 0;
+                let page = this.page + 1;
+                if(userIndex + 1 === this.userList.length){this.page = 0; page = this.page;} 
+                if(this.userList[page].id !== this.socket.id) this.myTurn++;
+            } 
+        });
     },  
     data(){
         return{
