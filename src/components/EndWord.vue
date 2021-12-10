@@ -148,12 +148,7 @@ export default {
         this.socket.removeAllListeners();
         this.socket.on('endwordList', data => {
             this.userList = data;
-            if(this.game){
-                if(data.length === 1){
-                    this.page = 0;
-                    this.socket.emit('endwordSolo', this.roomInfo.roomId);
-                }
-            }
+            this.game && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);
         });
         this.socket.on('roomInfo', data => {this.roomInfo = data;});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
