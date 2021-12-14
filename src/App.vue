@@ -15,12 +15,27 @@ export default {
 *{
   font-family: 'Jua', sans-serif;
 }
+@media screen and (min-width:630px){
+  #app{width: 100%; }
+}
+@media screen and (max-width:630px){
+  #app{width: 630px;} 
+}
+@media screen and (min-height:657px){
+  #app{height: 100vh;} 
+}
+@media screen and (max-height:656px){
+  #app{height: 657px;} 
+}
+@media screen and (max-height:647px){
+  #app{height: 647px;} 
+}
+
   #app{
-        width: 100%;
-        height: 100vh;
         background-color: #313131;
         overflow: auto;
         display: flex;
         align-items: center;
+        scrollbar-width: none;
   }
 </style>

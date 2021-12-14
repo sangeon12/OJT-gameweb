@@ -199,7 +199,7 @@ export default {
             if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
             this.cycle();
         });
-        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score}); console.log('실행');});
+        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score});});
         this.socket.on('endwordOut', data => {
             let userIndex = this.userList.findIndex(x => x.id === data);
             if(this.game) if(this.page === userIndex){
@@ -338,27 +338,22 @@ export default {
 
 <style scoped>  
 @media screen and (min-width:900px){
-  #endword{
-        width: 70%;
-        height: 70%;
-    }
+  #endword{width: 70%;}
+  #input-word{width: 35%;}
 }
 @media screen and (max-width:900px){
-  #endword{
-      width: 630px;
-      height: 460px;
-    }
+  #endword{width: 630px;} 
+  #input-word{ width: 49.4%;}
 }
-/* @media screen and (max-width:630px){
-  
-}   
-@media screen and (min-width:550px){
-    #input-word{
-        position: fixed;
-        margin-top: 0.5%;
-        width: 35%;
-    }
-} */
+@media screen and (min-height:657px){
+  #endword{height: 70%;} 
+}
+@media screen and (max-height:656px){
+  #endword{height: 459.9px;} 
+}
+@media screen and (max-width:963px){
+  .play-room > .word-list > .words > .word{font-size: 14px;}
+}
 
     #endword{
         margin: 0 auto;
@@ -554,6 +549,11 @@ export default {
 
     .play-room > .guide > .content > .word-time > .time > .num{
         margin-left: 1%;
+    }
+
+    #input-word{
+        position: fixed;
+        margin-top: 0.5%;
     }
 
     .play-room > .word-list{

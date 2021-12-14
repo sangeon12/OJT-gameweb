@@ -89,10 +89,20 @@ export default {
 </script>
 
 <style scoped>
+@media screen and (min-width:900px){
+  #chating{width: 70%; }
+}
+@media screen and (max-width:900px){
+  #chating{width: 630px;} 
+}
+@media screen and (min-height:657px){
+  #chating{height: 70%;} 
+}
+@media screen and (max-height:656px){
+  #chating{height: 459.9px;} 
+}
     #chating{
         margin: 0 auto;
-        width: 70%;
-        height: 70%;
         background-color: white;
         border-radius: 10px;
         display: grid;

@@ -202,13 +202,32 @@ export default {
 </script>
 
 <style scoped>
-@media screen and (min-width:720px){
-  #main{width: 504px;}
+@media screen and (min-width:900px){
+  #main{width: 70%;}
+}
+@media screen and (max-width:900px){
+  #main{width: 630px;} 
+}
+@media screen and (min-height:657px){
+  #main{height: 70%;} 
+}
+@media screen and (max-height:656px){
+  #main{height: 459.9px;} 
+}
+@media screen and (min-width:1030px){
+  .rooms{
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  }
+}
+@media screen and (max-width:1029px){
+  .rooms{
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+  }
 }
   #main{
     margin: 0 auto;
-    width: 70%;
-    height: 70%;
     background-color: white;
     border-radius: 10px;
     position: relative;
@@ -312,8 +331,6 @@ export default {
     width: 98%;
     height: 98%; 
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   }
 
   .room{
@@ -329,9 +346,7 @@ export default {
   }
 
   .roomName{
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+    text-align: center;
   }
 
   .right{
