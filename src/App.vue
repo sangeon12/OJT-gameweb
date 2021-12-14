@@ -36,6 +36,5 @@ export default {
         overflow: auto;
         display: flex;
         align-items: center;
-        scrollbar-width: none;
   }
 </style>
