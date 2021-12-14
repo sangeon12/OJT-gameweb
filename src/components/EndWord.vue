@@ -343,7 +343,7 @@ export default {
 }
 @media screen and (max-width:900px){
   #endword{width: 630px;} 
-  #input-word{ width: 49.4%;}
+  #input-word{width: 314px;}
 }
 @media screen and (min-height:657px){
   #endword{height: 70%;} 
@@ -352,7 +352,7 @@ export default {
   #endword{height: 459.9px;} 
 }
 @media screen and (max-width:963px){
-  .play-room > .word-list > .words > .word{font-size: 14px;}
+  .play-room > .word-list > .words > .word{font-size: 12px;}
 }
 
     #endword{
