@@ -11,6 +11,10 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+*{
+  font-family: 'Jua', sans-serif;
+}
   #app{
         width: 100%;
         height: 100vh;

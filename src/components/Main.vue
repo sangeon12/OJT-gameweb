@@ -202,6 +202,9 @@ export default {
 </script>
 
 <style scoped>
+@media screen and (min-width:720px){
+  #main{width: 504px;}
+}
   #main{
     margin: 0 auto;
     width: 70%;
@@ -382,6 +385,7 @@ export default {
   .chating{
     overflow-y: scroll;
     scrollbar-width: none;
+    background-color: #e2e4fa;
   }
   .chating::-webkit-scrollbar {
     display: none;

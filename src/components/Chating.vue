@@ -161,6 +161,7 @@ export default {
     }
 
     .chating{
+        background-color: #e2e4fa;
         overflow-y: scroll;
         scrollbar-width: none;
     }

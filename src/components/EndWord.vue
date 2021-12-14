@@ -148,7 +148,7 @@ export default {
         this.socket.removeAllListeners();
         this.socket.on('endwordList', data => {
             this.userList = data;
-            this.game && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);
+            this.game && !this.gameEnd && data.length === 1 && this.socket.emit('endwordSolo', this.roomInfo.roomId);
         });
         this.socket.on('roomInfo', data => {this.roomInfo = data;});
         this.socket.on('endwordAwesome', data =>{this.chatList.push(data); this.scroll();});
@@ -199,7 +199,7 @@ export default {
             if(this.roomInfo.host === this.socket.id) this.socket.emit('endwordCycle', this.roomInfo.roomId);
             this.cycle();
         });
-        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score});});
+        this.socket.on('endwordGameEnd', data => {this.gameEnd = true; this.sortUserList = data.sort((a,b)=>{return b.score - a.score}); console.log('실행');});
         this.socket.on('endwordOut', data => {
             let userIndex = this.userList.findIndex(x => x.id === data);
             if(this.game) if(this.page === userIndex){
@@ -232,8 +232,8 @@ export default {
             phoneticRule:null,
             turn:0,
             myTurn:0,
-            gameEnd:false,
-            game:false //게임중인지 판별하는 변수
+            gameEnd:false, //게임이 끝났을때 true로 바뀌는 변수
+            game:false //게임중인지 판별하여 화면을 전환하는 변수
         }
     },
     methods:{
@@ -337,10 +337,31 @@ export default {
 </script>
 
 <style scoped>  
-    #endword{
-        margin: 0 auto;
+@media screen and (min-width:900px){
+  #endword{
         width: 70%;
         height: 70%;
+    }
+}
+@media screen and (max-width:900px){
+  #endword{
+      width: 630px;
+      height: 460px;
+    }
+}
+/* @media screen and (max-width:630px){
+  
+}   
+@media screen and (min-width:550px){
+    #input-word{
+        position: fixed;
+        margin-top: 0.5%;
+        width: 35%;
+    }
+} */
+
+    #endword{
+        margin: 0 auto;
         background-color: white;
         border-radius: 10px;
         position: relative;
@@ -475,6 +496,7 @@ export default {
     }
 
     .wait-room > .right > .public-chat > .chating{
+        background-color: #e2e4fa;
         overflow-y: scroll;
         scrollbar-width: none;
     }
@@ -532,18 +554,6 @@ export default {
 
     .play-room > .guide > .content > .word-time > .time > .num{
         margin-left: 1%;
-    }
-    
-    #input-word{
-        position: fixed;
-        margin-top: 0.5%;
-        width: 35%;
-    }
-
-    #input-word{
-        position: fixed;
-        margin-top: 0.5%;
-        width: 35%;
     }
 
     .play-room > .word-list{
@@ -621,6 +631,7 @@ export default {
     }
 
     .play-room > .public-chat > .chating{
+        background-color: #e2e4fa;
         overflow-y: scroll;
         scrollbar-width: none;
     }
