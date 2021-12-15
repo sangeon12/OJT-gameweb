@@ -11,19 +11,11 @@ export default {
 </script>
 
 <style scoped>
-@font-face {
-    font-family: 'TmoneyRoundWindExtraBold';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/TmoneyRoundWindExtraBold.woff') format('woff');
-    font-weight: lighter;
-    font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
 *{
-  font-family: 'TmoneyRoundWindExtraBold';
-  font-size: 14px;
+  font-family: 'Jua', sans-serif;
 }
-.btn-secondary{
-  font-size: 14px;
-}
+
 @media screen and (min-width:630px){
   #app{width: 100%; }
 }

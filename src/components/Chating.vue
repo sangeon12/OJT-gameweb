@@ -11,7 +11,7 @@
                 <div class="user" v-for="user in userList" :key="user" :class="{my:user.id === socket.id}" @click="kick(user.id)">{{user.nickName}}<i class="fas fa-tag" v-if="user.id === roomInfo.host"></i></div>
             </div>
             <div class="menu">
-                <button type="button" class="btn btn-outline-dark" id="out" @click="outRoom">나가기</button>
+                <button type="button" class="btn btn-outline-dark" id="out" @click="outRoom"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </div>
 
@@ -26,7 +26,7 @@
                 </div>  
                 <div class="send">
                     <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
-                    <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
+                    <button type="button" class="btn btn-outline-dark" @click="sendMsg"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
         </div>
@@ -101,6 +101,7 @@ export default {
 @media screen and (max-height:656px){
   #chating{height: 459.9px;} 
 }
+
     #chating{
         margin: 0 auto;
         background-color: white;

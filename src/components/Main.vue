@@ -226,6 +226,7 @@ export default {
     grid-template-rows: 1fr 1fr 1fr;
   }
 }
+
   #main{
     margin: 0 auto;
     background-color: white;

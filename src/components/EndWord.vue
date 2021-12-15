@@ -22,7 +22,7 @@
                         <div class="room-button">
                             <button type="button" class="btn btn-secondary" @click="gameStart" v-if="roomInfo.host === socket.id">시작하기</button>
                             <button type="button" class="btn btn-secondary" @click="ready" v-else>준비하기</button>
-                            <button type="button" class="btn btn-secondary" @click="outRoom">나가기</button>
+                            <button type="button" class="btn btn-secondary" @click="outRoom"><i class="fas fa-sign-out-alt"></i></button>
                         </div>
                     </div>
                     <div class="title">유저</div>
@@ -49,7 +49,7 @@
                         </div>
                         <div class="send">
                             <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
-                            <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
+                            <button type="button" class="btn btn-outline-dark" @click="sendMsg"><i class="fas fa-paper-plane"></i></button>
                         </div>
                     </div>
                 </div>
@@ -112,9 +112,9 @@
                         </div>
                     </div>
                     <div class="send">
-                        <button type="button" class="btn btn-outline-dark" @click="outRoom">나가기</button>
+                        <button type="button" class="btn btn-outline-dark" @click="outRoom"><i class="fas fa-sign-out-alt"></i></button>
                         <input type="text" class="form-control" placeholder="message" aria-label="message" aria-describedby="basic-addon1" v-model="msgInput" @keydown.enter="sendMsg">
-                        <button type="button" class="btn btn-outline-dark" @click="sendMsg">>></button>
+                        <button type="button" class="btn btn-outline-dark" @click="sendMsg"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
             </div>
@@ -352,7 +352,7 @@ export default {
   #endword{height: 459.9px;} 
 }
 @media screen and (max-width:963px){
-  .play-room > .word-list > .words > .word{font-size: 12px;}
+  .play-room > .word-list > .words > .word{font-size: 14px;}
 }
 
     #endword{
