@@ -12,8 +12,10 @@ const axios = require("axios");
 
                 let type = $('.word_class').eq(0).text();
                 let content = null;
-                if( type === '[명사]') content = $('.lst_krdic li:first-child p:nth-child(2)').text().replace(/(\s*)/g, "").replace(/\[[ㄱ-ㅎ|ㅏ-ㅣ|가-힣][ㄱ-ㅎ|ㅏ-ㅣ|가-힣]]/g, "").replace("1.", "");                
-                result = {name:word, content:content.split(".")[0]};
+                // if( type === '[명사]') content = $('.lst_krdic li:first-child p:nth-child(2)').text().replace(/\[[ㄱ-ㅎ|ㅏ-ㅣ|가-힣][ㄱ-ㅎ|ㅏ-ㅣ|가-힣]]|\[[ㄱ-ㅎ|ㅏ-ㅣ|가-힣][ㄱ-ㅎ|ㅏ-ㅣ|가-힣] ]/g, "").replace("1.", "").split(".")[0].trim();                
+                if( type === '[명사]') content = $('.lst_krdic li:first-child p:nth-child(2)').text().replace(/\[[^)]*\]/g, "").replace("1.", "").split(".")[0].trim();                
+                result = {name:word, content:content};
+                console.log(result);
                 resolve({result});
             })
         });
